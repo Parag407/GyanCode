@@ -1042,11 +1042,6 @@ app.delete('/certificates/:id', authenticate, async (req, res) => {
 });
 
 // ───────────────────────── ADMIN ─────────────────────────
-const requireAdmin = async (req, res, next) => {
-    const { data: profile } = await supabaseAdmin.from('users').select('role').eq('id', req.user.id).single();
-    if (profile?.role !== 'Admin') return res.status(403).json({ error: 'Admin access required' });
-    next();
-};
 
 // GET /admin/stats — system-wide overview
 app.get('/admin/stats', authenticate, requireAdmin, async (req, res) => {
