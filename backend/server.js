@@ -20,7 +20,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 const { authenticate, authorize } = require('./middleware/auth');
-const { generateHint, simulateExecutionAI, verifySubmissionAI } = require('./utils/ai');
+const { generateHint, simulateExecutionAI, verifySubmissionAI, runAITask } = require('./utils/ai');
 
 // CORS configuration - Allow Vercel frontend and local development
 const allowedOrigins = [
@@ -31,13 +31,19 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: function (origin, callback) {
-        // allow requests with no origin (like mobile apps or curl requests)
+        // Allow requests with no origin (like mobile apps)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) === -1) {
+        
+        // Allow local development and any vercel deployment
+        const isVercel = origin.endsWith('.vercel.app');
+        const isLocal = origin.startsWith('http://localhost:');
+        
+        if (isVercel || isLocal || origin === 'https://gyan-code.vercel.app') {
+            return callback(null, true);
+        } else {
             const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
             return callback(new Error(msg), false);
         }
-        return callback(null, true);
     },
     credentials: true
 }));
