@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: gyancode-backend
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: SUPABASE_URL
+        fromConfig: true
+      - key: SUPABASE_ANON_KEY
+        fromConfig: true
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        fromConfig: true
+      - key: GEMINI_API_KEY
+        fromConfig: true
+      - key: OPENROUTER_API_KEY
+        fromConfig: true
+      - key: VITE_API_URL
+        fromConfig: true
