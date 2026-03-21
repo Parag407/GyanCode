@@ -29,14 +29,8 @@ const DIFF_COLOR = {
 export default function Playground() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const problemId = searchParams.get('problem'); // e.g. 'uuid-from-db'
-
-  // Load problem from param if present
-  const problem = problemId ? DEFAULT_PROBLEMS.find(p => p.id === problemId) : null;
-
-  const initLang = problem ? (LANG_MAP[problem.language] || 'python') : 'python';
-  const initCode = problem?.boilerplate || LANGUAGES.find(l => l.value === initLang)?.default || '';
-
+  const [loading, setLoading] = useState(false);
+  const [problem, setProblem] = useState(null);
   const [language, setLanguage] = useState('python');
   const [code, setCode] = useState(LANGUAGES[0].default);
   const [input, setInput] = useState('');
@@ -48,18 +42,25 @@ export default function Playground() {
   const [copied, setCopied] = useState(false);
   const [showInput, setShowInput] = useState(false);
   const [showProblem, setShowProblem] = useState(false);
+  const [isMounted, setIsMounted] = useState(true);
 
   useEffect(() => {
+    return () => setIsMounted(false);
+  }, []);
+
+  useEffect(() => {
+    const problemId = searchParams.get('problem');
     if (problemId) {
       const fetchProblem = async () => {
         setLoading(true);
         try {
           const { data: { session } } = await supabase.auth.getSession();
+          if (!session) return;
           const res = await fetch(`${import.meta.env.VITE_API_URL}/assignments/${problemId}`, {
-            headers: { 'Authorization': `Bearer ${session?.access_token}` }
+            headers: { 'Authorization': `Bearer ${session.access_token}` }
           });
           const data = await res.json();
-          if (data && !data.error) {
+          if (isMounted && data && !data.error) {
             setProblem(data);
             const langValue = LANG_MAP[data.language] || 'python';
             setLanguage(langValue);
@@ -68,16 +69,19 @@ export default function Playground() {
           }
         } catch (err) {
           console.error("Failed to fetch problem:", err);
+        } finally {
+          if (isMounted) setLoading(false);
         }
-        setLoading(false);
       };
       fetchProblem();
+    } else {
+      setProblem(null);
     }
-  }, [problemId]);
+  }, [searchParams, isMounted]);
 
   // If no problem param, change language resets code
   const handleLanguageChange = (lang) => {
-    if (problemId) return; // Don't reset when a problem is being loaded or present
+    if (searchParams.get('problem')) return; // Don't reset when a problem is being loaded or present
     setLanguage(lang);
     const langDef = LANGUAGES.find(l => l.value === lang);
     setCode(langDef?.default || '');

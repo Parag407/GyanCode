@@ -32,7 +32,12 @@ export default function Workspace() {
   const [testResults, setTestResults] = useState([]);
   const [pastSubmissions, setPastSubmissions] = useState([]);
   const [nextAssignmentId, setNextAssignmentId] = useState(null);
+  const [isMounted, setIsMounted] = useState(true);
   const timerRef = useRef(null);
+
+  useEffect(() => {
+    return () => setIsMounted(false);
+  }, []);
 
   useEffect(() => {
     const fetchAssignment = async () => {
@@ -41,47 +46,49 @@ export default function Workspace() {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
       const data = await res.json();
-      if (data) {
-        setAssignment(data);
-        const defaults = {
-          python: `# ${data.title}\n# ${data.description || 'Write your solution below'}\n\n`,
-          javascript: `// ${data.title}\n// ${data.description || 'Write your solution below'}\n\n`,
-          cpp: `// ${data.title}\n#include <iostream>\nusing namespace std;\n\nint main() {\n    \n    return 0;\n}`,
-          c: `// ${data.title}\n#include <stdio.h>\n\nint main() {\n    \n    return 0;\n}`,
-          java: `// ${data.title}\npublic class Main {\n    public static void main(String[] args) {\n        \n    }\n}`
-        };
-        if (data.starter_code) {
-          setCode(data.starter_code);
-        } else {
-          setCode(defaults[data.language.toLowerCase()] || '');
-        }
+      if (isMounted) {
+        if (data) {
+          setAssignment(data);
+          const defaults = {
+            python: `# ${data.title}\n# ${data.description || 'Write your solution below'}\n\n`,
+            javascript: `// ${data.title}\n// ${data.description || 'Write your solution below'}\n\n`,
+            cpp: `// ${data.title}\n#include <iostream>\nusing namespace std;\n\nint main() {\n    \n    return 0;\n}`,
+            c: `// ${data.title}\n#include <stdio.h>\n\nint main() {\n    \n    return 0;\n}`,
+            java: `// ${data.title}\npublic class Main {\n    public static void main(String[] args) {\n        \n    }\n}`
+          };
+          if (data.starter_code) {
+            setCode(data.starter_code);
+          } else {
+            setCode(defaults[data.language.toLowerCase()] || '');
+          }
 
-        // Fetch previous attempts
-        const { data: { session: s2 } } = await supabase.auth.getSession();
-        const subRes = await fetch(import.meta.env.VITE_API_URL + '/submissions', {
-          headers: { 'Authorization': `Bearer ${s2.access_token}` }
-        });
-        const subs = await subRes.json();
-        if (Array.isArray(subs)) {
-          const mySubs = subs.filter(s => s.assignment_id === id);
-          setAttemptCount(mySubs.length);
-          setAlreadySolved(mySubs.some(s => s.status === 'Success'));
-          setPastSubmissions(mySubs.sort((a,b) => new Date(b.submitted_at) - new Date(a.submitted_at)));
-        }
+          // Fetch previous attempts
+          const { data: { session: s2 } } = await supabase.auth.getSession();
+          const subRes = await fetch(import.meta.env.VITE_API_URL + '/submissions', {
+            headers: { 'Authorization': `Bearer ${s2.access_token}` }
+          });
+          const subs = await subRes.json();
+          if (Array.isArray(subs)) {
+            const mySubs = subs.filter(s => s.assignment_id === id);
+            setAttemptCount(mySubs.length);
+            setAlreadySolved(mySubs.some(s => s.status === 'Success'));
+            setPastSubmissions(mySubs.sort((a,b) => new Date(b.submitted_at) - new Date(a.submitted_at)));
+          }
 
-        // Find next assignment
-        const allRes = await fetch(import.meta.env.VITE_API_URL + '/assignments', {
-          headers: { 'Authorization': `Bearer ${s2.access_token}` }
-        });
-        const allAssigns = await allRes.json();
-        if (Array.isArray(allAssigns)) {
-           const currentIndex = allAssigns.findIndex(a => a.id === id);
-           if (currentIndex !== -1 && currentIndex < allAssigns.length - 1) {
-             setNextAssignmentId(allAssigns[currentIndex + 1].id);
-           }
+          // Find next assignment
+          const allRes = await fetch(import.meta.env.VITE_API_URL + '/assignments', {
+            headers: { 'Authorization': `Bearer ${s2.access_token}` }
+          });
+          const allAssigns = await allRes.json();
+          if (Array.isArray(allAssigns)) {
+             const currentIndex = allAssigns.findIndex(a => a.id === id);
+             if (currentIndex !== -1 && currentIndex < allAssigns.length - 1) {
+               setNextAssignmentId(allAssigns[currentIndex + 1].id);
+             }
+          }
         }
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchAssignment();
 
