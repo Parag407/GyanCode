@@ -47,7 +47,8 @@ export default function Leaderboard({ profile }) {
 
   const periodLabel = { alltime: 'All Time', monthly: 'This Month', weekly: 'This Week' };
 
-  if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div></div>;
+  // Soft loading check
+  const isDataReady = !loading || students.length > 0;
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-fade-in-up">
@@ -142,48 +143,54 @@ export default function Leaderboard({ profile }) {
           <span className="text-xs text-gray-500">{filtered.length} student{filtered.length !== 1 ? 's' : ''}</span>
         </div>
         <div className="divide-y divide-white/[0.03]">
-          {filtered.map((s, i) => {
-            const globalRank = students.indexOf(s);
-            const style = rankStyle(globalRank);
-            const badge = rankBadge(globalRank, students.length);
-            const barWidth = Math.max(4, Math.round((s.total_points / topScore) * 100));
-            return (
-              <div key={s.id} className={`p-4 px-4 sm:px-6 ${style.bg} hover:bg-white/[0.02] transition-colors`}>
-                <div className="flex items-center gap-4">
-                  <span className={`w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 ${style.badge}`}>
-                    {style.icon || (globalRank + 1)}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold text-sm truncate">
-                        {['Educator', 'Admin'].includes(profile?.role) ? <Link to={`/educator/student/${s.id}`} className="hover:text-primary-light transition-colors">{s.name}</Link> : s.name}
-                      </p>
-                      {badge && (
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border hidden sm:inline-flex ${badge.color}`}>
-                          {badge.label}
+          {!isDataReady ? (
+            [...Array(5)].map((_, i) => (
+              <div key={i} className="p-6 h-16 animate-pulse bg-white/5"></div>
+            ))
+          ) : (
+            filtered.map((s, i) => {
+              const globalRank = students.indexOf(s);
+              const style = rankStyle(globalRank);
+              const badge = rankBadge(globalRank, students.length);
+              const barWidth = Math.max(4, Math.round((s.total_points / topScore) * 100));
+              return (
+                <div key={s.id} className={`p-4 px-4 sm:px-6 ${style.bg} hover:bg-white/[0.02] transition-colors`}>
+                  <div className="flex items-center gap-4">
+                    <span className={`w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 ${style.badge}`}>
+                      {style.icon || (globalRank + 1)}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-semibold text-sm truncate">
+                          {['Educator', 'Admin'].includes(profile?.role) ? <Link to={`/educator/student/${s.id}`} className="hover:text-primary-light transition-colors">{s.name}</Link> : s.name}
+                        </p>
+                        {badge && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border hidden sm:inline-flex ${badge.color}`}>
+                            {badge.label}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-gray-500">{s.department || '—'} • {s.academic_year || '—'}</p>
+                      <div className="mt-2 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-700" style={{ width: `${barWidth}%` }} />
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="bg-primary/10 text-primary-light text-sm font-bold px-3 py-1 rounded-lg block">
+                        {s.total_points || 0}
+                      </span>
+                      {s.solved_count > 0 && (
+                        <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 justify-end mt-1">
+                          <CheckCircle2 size={9} /> {s.solved_count} solved
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-gray-500">{s.department || '—'} • {s.academic_year || '—'}</p>
-                    <div className="mt-2 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-700" style={{ width: `${barWidth}%` }} />
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <span className="bg-primary/10 text-primary-light text-sm font-bold px-3 py-1 rounded-lg block">
-                      {s.total_points || 0}
-                    </span>
-                    {s.solved_count > 0 && (
-                      <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 justify-end mt-1">
-                        <CheckCircle2 size={9} /> {s.solved_count} solved
-                      </span>
-                    )}
                   </div>
                 </div>
-              </div>
-            );
-          })}
-          {filtered.length === 0 && (
+              );
+            })
+          )}
+          {isDataReady && filtered.length === 0 && (
             <div className="p-12 text-center text-gray-600">
               {students.length === 0 ? `No activity ${period === 'weekly' ? 'this week' : period === 'monthly' ? 'this month' : 'yet'}.` : 'No results found.'}
             </div>

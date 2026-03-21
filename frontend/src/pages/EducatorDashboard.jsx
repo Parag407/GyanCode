@@ -142,7 +142,8 @@ export default function EducatorDashboard() {
     scales: { x: { grid: { display: false }, ticks: { color: '#6b7280', font: { size: 11 } } }, y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6b7280' } } }
   };
 
-  if (loading && !stats) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div></div>;
+  // Soft loading check
+  const isDataReady = !loading || !!stats;
 
   return (
     <div className={`space-y-8 animate-fade-in-up ${loading ? 'opacity-60 transition-opacity' : ''}`}>
@@ -158,19 +159,25 @@ export default function EducatorDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-        {[
-          { icon: <Users size={22} />, label: 'Students', value: stats?.studentCount, color: 'from-blue-500/15 to-cyan-500/5', ic: 'text-blue-400' },
-          { icon: <FileCheck size={22} />, label: 'Submissions', value: stats?.submissionCount, color: 'from-violet-500/15 to-purple-500/5', ic: 'text-violet-400' },
-          { icon: <Trophy size={22} />, label: 'Pass Rate', value: stats?.submissionCount ? Math.round((stats.successCount / stats.submissionCount) * 100) + '%' : 'N/A', color: 'from-emerald-500/15 to-teal-500/5', ic: 'text-emerald-400' },
-          { icon: <TrendingUp size={22} />, label: 'Assignments', value: stats?.assignmentCount, color: 'from-amber-500/15 to-orange-500/5', ic: 'text-amber-400' },
-          { icon: <Zap size={22} />, label: 'Active Today', value: stats?.activeStudentsToday ?? '—', color: 'from-red-500/15 to-pink-500/5', ic: 'text-red-400' },
-        ].map((s, i) => (
-          <div key={i} className="glass-card stat-card rounded-2xl p-4 sm:p-6 space-y-3">
-            <div className={`bg-gradient-to-br ${s.color} w-11 h-11 rounded-xl flex items-center justify-center ${s.ic}`}>{s.icon}</div>
-            <p className="text-2xl font-black text-white">{s.value}</p>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{s.label}</p>
-          </div>
-        ))}
+        {!isDataReady ? (
+          [...Array(5)].map((_, i) => (
+            <div key={i} className="glass-card rounded-2xl p-6 h-32 animate-pulse bg-white/5"></div>
+          ))
+        ) : (
+          [
+            { icon: <Users size={22} />, label: 'Students', value: stats?.studentCount, color: 'from-blue-500/15 to-cyan-500/5', ic: 'text-blue-400' },
+            { icon: <FileCheck size={22} />, label: 'Submissions', value: stats?.submissionCount, color: 'from-violet-500/15 to-purple-500/5', ic: 'text-violet-400' },
+            { icon: <Trophy size={22} />, label: 'Pass Rate', value: stats?.submissionCount ? Math.round((stats.successCount / stats.submissionCount) * 100) + '%' : 'N/A', color: 'from-emerald-500/15 to-teal-500/5', ic: 'text-emerald-400' },
+            { icon: <TrendingUp size={22} />, label: 'Assignments', value: stats?.assignmentCount, color: 'from-amber-500/15 to-orange-500/5', ic: 'text-amber-400' },
+            { icon: <Zap size={22} />, label: 'Active Today', value: stats?.activeStudentsToday ?? '—', color: 'from-red-500/15 to-pink-500/5', ic: 'text-red-400' },
+          ].map((s, i) => (
+            <div key={i} className="glass-card stat-card rounded-2xl p-4 sm:p-6 space-y-3">
+              <div className={`bg-gradient-to-br ${s.color} w-11 h-11 rounded-xl flex items-center justify-center ${s.ic}`}>{s.icon}</div>
+              <p className="text-2xl font-black text-white">{s.value}</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{s.label}</p>
+            </div>
+          ))
+        )}
       </div>
 
       {/* 7-Day Submissions Trend */}

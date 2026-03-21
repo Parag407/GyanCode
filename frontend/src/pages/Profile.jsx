@@ -80,7 +80,8 @@ export default function Profile() {
     setPwSaving(false);
   };
 
-  if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div></div>;
+  // Soft loading check
+  const isDataReady = !loading || profile;
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-fade-in-up">
@@ -89,41 +90,49 @@ export default function Profile() {
         <ArrowLeft size={16} /> <span className="hidden sm:inline">Back</span>
       </button>
       {/* Header Card */}
-      <div className="glass-card rounded-2xl p-4 sm:p-8 text-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5"></div>
-        <div className="relative z-10 space-y-4">
-          <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-3xl flex items-center justify-center text-3xl sm:text-4xl font-black text-white mx-auto shadow-xl shadow-primary/20">
-            {profile?.name?.charAt(0) || '?'}
-          </div>
-          <div>
-            <h1 className="text-2xl font-black tracking-tight">{profile?.name || 'User'}</h1>
-            <p className="text-gray-400 text-sm flex items-center justify-center gap-1.5 mt-1">
-              <Mail size={14} className="text-gray-500" /> {profile?.email}
-            </p>
-            <span className="inline-block mt-2 text-[11px] font-bold bg-primary/15 text-primary-light px-3 py-1 rounded-lg">
-              {profile?.role}
-            </span>
-          </div>
-          <div className="flex justify-center gap-4 sm:gap-8 pt-2">
-            <div className="text-center">
-              <p className="text-xl font-black text-white">{profile?.total_points || 0}</p>
-              <p className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider flex items-center gap-1 justify-center"><Trophy size={10} /> Points</p>
+      {!isDataReady ? (
+        <div className="glass-card rounded-2xl p-8 animate-pulse flex flex-col items-center gap-4">
+           <div className="w-24 h-24 bg-white/5 rounded-3xl mx-auto"></div>
+           <div className="h-6 w-48 bg-white/5 rounded mx-auto"></div>
+           <div className="h-4 w-32 bg-white/5 rounded mx-auto"></div>
+        </div>
+      ) : (
+        <div className="glass-card rounded-2xl p-4 sm:p-8 text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5"></div>
+          <div className="relative z-10 space-y-4">
+            <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-3xl flex items-center justify-center text-3xl sm:text-4xl font-black text-white mx-auto shadow-xl shadow-primary/20">
+              {profile?.name?.charAt(0) || '?'}
             </div>
-            <div className="border-l border-white/10 pl-4 sm:pl-8 text-center">
-              <p className="text-xl font-black text-white">{stats.solved || 0}</p>
-              <p className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider flex items-center gap-1 justify-center"><CheckCircle2 size={10} /> Solved</p>
+            <div>
+              <h1 className="text-2xl font-black tracking-tight">{profile?.name || 'User'}</h1>
+              <p className="text-gray-400 text-sm flex items-center justify-center gap-1.5 mt-1">
+                <Mail size={14} className="text-gray-500" /> {profile?.email}
+              </p>
+              <span className="inline-block mt-2 text-[11px] font-bold bg-primary/15 text-primary-light px-3 py-1 rounded-lg">
+                {profile?.role}
+              </span>
             </div>
-            <div className="border-l border-white/10 pl-4 sm:pl-8 text-center">
-              <p className="text-xl font-black text-white">{stats.submissions}</p>
-              <p className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider flex items-center gap-1 justify-center"><FileCheck size={10} /> Attempts</p>
-            </div>
-            <div className="border-l border-white/10 pl-4 sm:pl-8 text-center">
-              <p className="text-xl font-black text-white">{stats.certificates}</p>
-              <p className="text-[10px] text-violet-400 font-semibold uppercase tracking-wider flex items-center gap-1 justify-center"><Award size={10} /> Certificates</p>
+            <div className="flex justify-center gap-4 sm:gap-8 pt-2">
+              <div className="text-center">
+                <p className="text-xl font-black text-white">{profile?.total_points || 0}</p>
+                <p className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider flex items-center gap-1 justify-center"><Trophy size={10} /> Points</p>
+              </div>
+              <div className="border-l border-white/10 pl-4 sm:pl-8 text-center">
+                <p className="text-xl font-black text-white">{stats.solved || 0}</p>
+                <p className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider flex items-center gap-1 justify-center"><CheckCircle2 size={10} /> Solved</p>
+              </div>
+              <div className="border-l border-white/10 pl-4 sm:pl-8 text-center">
+                <p className="text-xl font-black text-white">{stats.submissions}</p>
+                <p className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider flex items-center gap-1 justify-center"><FileCheck size={10} /> Attempts</p>
+              </div>
+              <div className="border-l border-white/10 pl-4 sm:pl-8 text-center">
+                <p className="text-xl font-black text-white">{stats.certificates}</p>
+                <p className="text-[10px] text-violet-400 font-semibold uppercase tracking-wider flex items-center gap-1 justify-center"><Award size={10} /> Certificates</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 bg-white/[0.03] p-1 rounded-xl w-fit">

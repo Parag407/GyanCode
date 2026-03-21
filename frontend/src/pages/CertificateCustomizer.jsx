@@ -125,14 +125,10 @@ export default function CertificateCustomizer() {
     users: { name: profile?.name || 'Educator Name' } // Issuer name
   };
 
-  if (!profile) return (
-    <div className="min-h-screen bg-bgColor flex items-center justify-center">
-       <Loader2 className="animate-spin text-amber-500" size={40} />
-    </div>
-  );
+  const loading = !profile;
 
   return (
-    <div className="min-h-screen bg-bgColor text-white p-4 sm:p-8 font-inter">
+    <div className={`min-h-screen bg-bgColor text-white p-4 sm:p-8 font-inter animate-fade-in-up ${loading ? 'opacity-60 transition-opacity' : ''}`}>
       <div className="max-w-7xl mx-auto space-y-8 mt-16">
         
         {/* Header */}

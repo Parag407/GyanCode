@@ -690,20 +690,24 @@ export default function AdminPanel() {
       </div>
 
       {/* Content */}
-      {!data && loading ? (
-        <div className="flex justify-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary" />
-        </div>
-      ) : (
-        <div className={loading ? 'opacity-60 transition-opacity' : ''}>
-          {tab === 'overview'      && <OverviewTab data={data} />}
-          {tab === 'users'         && <UsersTab data={data} reload={reload} />}
-          {tab === 'assignments'   && <AssignmentsTab data={data} reload={reload} />}
-          {tab === 'submissions'   && <SubmissionsTab data={data} />}
-          {tab === 'certificates'  && <CertificatesTab data={data} reload={reload} />}
-          {tab === 'announcements' && <AnnouncementsTab data={data} reload={reload} />}
-        </div>
-      )}
+      <div className={loading ? 'opacity-60 transition-opacity' : ''}>
+        {!data && loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 animate-pulse">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="glass-card rounded-2xl h-24 bg-white/5"></div>
+            ))}
+          </div>
+        ) : (
+          <>
+            {tab === 'overview'      && <OverviewTab data={data} />}
+            {tab === 'users'         && <UsersTab data={data} reload={reload} />}
+            {tab === 'assignments'   && <AssignmentsTab data={data} reload={reload} />}
+            {tab === 'submissions'   && <SubmissionsTab data={data} />}
+            {tab === 'certificates'  && <CertificatesTab data={data} reload={reload} />}
+            {tab === 'announcements' && <AnnouncementsTab data={data} reload={reload} />}
+          </>
+        )}
+      </div>
     </div>
   );
 }

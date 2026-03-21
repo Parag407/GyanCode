@@ -657,11 +657,8 @@ export default function Certificates() {
     return matchQ && matchCat;
   });
 
-  if (loading && certificates.length === 0) return (
-    <div className="flex justify-center py-20">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary" />
-    </div>
-  );
+  // Soft loading check
+  const isDataReady = !loading || certificates.length > 0;
 
   const isEducator = ['Educator', 'Admin'].includes(profile?.role);
 
@@ -725,9 +722,13 @@ export default function Certificates() {
       )}
 
       {/* Stats */}
-      {stats.total > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {!isDataReady ? (
+          [...Array(4)].map((_, i) => (
+            <div key={i} className="glass-card rounded-2xl p-5 h-24 animate-pulse bg-white/5"></div>
+          ))
+        ) : (
+          stats.total > 0 && [
             { label: 'Total Certificates', value: stats.total, icon: <Award size={18} />, color: 'text-amber-400', bg: 'bg-amber-500/10' },
             { label: 'This Month', value: stats.thisMonth, icon: <Calendar size={18} />, color: 'text-blue-400', bg: 'bg-blue-500/10' },
             { label: 'Categories', value: Object.keys(stats.categories).length, icon: <Tag size={18} />, color: 'text-violet-400', bg: 'bg-violet-500/10' },
@@ -740,9 +741,9 @@ export default function Certificates() {
                 <p className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider">{stat.label}</p>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
 
       {/* Success message */}
       {successMsg && (
@@ -787,9 +788,13 @@ export default function Certificates() {
       )}
 
       {/* Certificates Grid */}
-      {filtered.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map(cert => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {!isDataReady ? (
+          [...Array(6)].map((_, i) => (
+            <div key={i} className="glass-card rounded-2xl h-80 animate-pulse bg-white/5"></div>
+          ))
+        ) : filtered.length > 0 ? (
+          filtered.map(cert => (
             <CertificateCard
               key={cert.id}
               cert={cert}
@@ -798,27 +803,17 @@ export default function Certificates() {
               onRevoke={handleRevoke}
               revoking={revoking}
             />
-          ))}
-        </div>
-      ) : !showForm && (
-        <div className="glass-card rounded-3xl p-16 text-center space-y-4 border border-white/5">
-          <div className="bg-amber-500/10 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto">
-            <Award size={40} className="text-amber-400" />
+          ))
+        ) : (
+          <div className="col-span-full py-20 text-center glass-card rounded-3xl border-dashed border-white/10">
+            <div className="bg-white/5 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-gray-600">
+              <Award size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-gray-400 italic">No certificates found</h3>
+            <p className="text-gray-600 text-sm mt-2">Try adjusting your filters or search query.</p>
           </div>
-          <h3 className="text-xl font-bold text-gray-400">No certificates yet</h3>
-          <p className="text-gray-600 text-sm max-w-sm mx-auto">
-            {isEducator
-              ? 'Click "Issue Certificate" to award a student for their achievement.'
-              : 'Complete assignments and excel in your courses to earn certificates from your educators.'}
-          </p>
-          {isEducator && (
-            <button onClick={() => setShowForm(true)}
-              className="btn-primary text-white px-4 sm:px-8 py-3 rounded-xl font-bold inline-flex items-center gap-2 mt-2">
-              <Gift size={16} /> Issue First Certificate
-            </button>
-          )}
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Full Certificate Modal */}
       {viewing && (

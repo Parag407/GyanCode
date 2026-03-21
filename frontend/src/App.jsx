@@ -82,8 +82,6 @@ function App() {
     setLoading(false);
   };
 
-  if (loading) return <div className="min-h-screen bg-dark flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div></div>;
-
   return (
     <Router>
       <div className="min-h-screen bg-dark text-white font-sans relative">
@@ -92,49 +90,55 @@ function App() {
 
         <Navbar session={session} profile={profile} />
         <main className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 relative z-10">
-          <Routes>
-            <Route path="/" element={<Home session={session} profile={profile} />} />
-            <Route path="/login" element={!session ? <Login /> : <Navigate to="/" />} />
-            <Route path="/register" element={!session ? <Register /> : <Navigate to="/" />} />
+          {loading ? (
+            <div className="min-h-screen bg-dark flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
+            </div>
+          ) : (
+            <Routes>
+              <Route path="/" element={<Home session={session} profile={profile} />} />
+              <Route path="/login" element={!session ? <Login /> : <Navigate to="/" />} />
+              <Route path="/register" element={!session ? <Register /> : <Navigate to="/" />} />
 
-            {/* Public */}
-            <Route path="/leaderboard" element={<Leaderboard profile={profile} />} />
-            <Route path="/playground" element={<Playground />} />
-            <Route path="/docs" element={<Documentation />} />
+              {/* Public */}
+              <Route path="/leaderboard" element={<Leaderboard profile={profile} />} />
+              <Route path="/playground" element={<Playground />} />
+              <Route path="/docs" element={<Documentation />} />
 
-            {/* Authenticated */}
-            <Route path="/profile" element={session ? <Profile /> : <Navigate to="/login" />} />
-            <Route path="/certificates" element={session ? <Certificates /> : <Navigate to="/login" />} />
-            <Route path="/ai-tutor" element={session ? <AiTutor /> : <Navigate to="/login" />} />
-            <Route path="/announcements" element={session ? <Announcements /> : <Navigate to="/login" />} />
+              {/* Authenticated */}
+              <Route path="/profile" element={session ? <Profile /> : <Navigate to="/login" />} />
+              <Route path="/certificates" element={session ? <Certificates /> : <Navigate to="/login" />} />
+              <Route path="/ai-tutor" element={session ? <AiTutor /> : <Navigate to="/login" />} />
+              <Route path="/announcements" element={session ? <Announcements /> : <Navigate to="/login" />} />
 
-            {/* Admin */}
-            <Route path="/admin" element={profile?.role === 'Admin' ? <AdminPanel /> : <Navigate to="/" />} />
+              {/* Admin */}
+              <Route path="/admin" element={profile?.role === 'Admin' ? <AdminPanel /> : <Navigate to="/" />} />
 
-            {/* Educator & Admin Shared Views */}
-            <Route path="/educator/assignment/:id" element={['Educator', 'Admin'].includes(profile?.role) ? <AssignmentDetail /> : <Navigate to="/" />} />
-            <Route path="/educator/student/:id" element={['Educator', 'Admin'].includes(profile?.role) ? <StudentProfile /> : <Navigate to="/" />} />
-            
-            {/* Educator & Admin Shared Overrides */}
-            <Route path="/educator/dashboard" element={['Educator', 'Admin'].includes(profile?.role) ? <EducatorDashboard /> : <Navigate to="/" />} />
-            <Route path="/educator/create-assignment" element={['Educator', 'Admin'].includes(profile?.role) ? <CreateAssignment /> : <Navigate to="/" />} />
-            <Route path="/educator/edit-assignment/:id" element={['Educator', 'Admin'].includes(profile?.role) ? <EditAssignment /> : <Navigate to="/" />} />
-            <Route path="/educator/my-assignments" element={['Educator', 'Admin'].includes(profile?.role) ? <MyAssignments /> : <Navigate to="/" />} />
-            <Route path="/educator/all-submissions" element={['Educator', 'Admin'].includes(profile?.role) ? <AllSubmissions /> : <Navigate to="/" />} />
-            <Route path="/educator/customize-certificate" element={['Educator', 'Admin'].includes(profile?.role) ? <CertificateCustomizer /> : <Navigate to="/" />} />
+              {/* Educator & Admin Shared Views */}
+              <Route path="/educator/assignment/:id" element={['Educator', 'Admin'].includes(profile?.role) ? <AssignmentDetail /> : <Navigate to="/" />} />
+              <Route path="/educator/student/:id" element={['Educator', 'Admin'].includes(profile?.role) ? <StudentProfile /> : <Navigate to="/" />} />
+              
+              {/* Educator & Admin Shared Overrides */}
+              <Route path="/educator/dashboard" element={['Educator', 'Admin'].includes(profile?.role) ? <EducatorDashboard /> : <Navigate to="/" />} />
+              <Route path="/educator/create-assignment" element={['Educator', 'Admin'].includes(profile?.role) ? <CreateAssignment /> : <Navigate to="/" />} />
+              <Route path="/educator/edit-assignment/:id" element={['Educator', 'Admin'].includes(profile?.role) ? <EditAssignment /> : <Navigate to="/" />} />
+              <Route path="/educator/my-assignments" element={['Educator', 'Admin'].includes(profile?.role) ? <MyAssignments /> : <Navigate to="/" />} />
+              <Route path="/educator/all-submissions" element={['Educator', 'Admin'].includes(profile?.role) ? <AllSubmissions /> : <Navigate to="/" />} />
+              <Route path="/educator/customize-certificate" element={['Educator', 'Admin'].includes(profile?.role) ? <CertificateCustomizer /> : <Navigate to="/" />} />
 
-            {/* Student */}
-            <Route path="/student/dashboard" element={profile?.role === 'Student' ? <StudentDashboard /> : <Navigate to="/" />} />
-            <Route path="/student/assignments" element={profile?.role === 'Student' ? <Assignments /> : <Navigate to="/" />} />
-            <Route path="/student/assignmentdetail/:id" element={profile?.role === 'Student' ? <AssignmentDetail /> : <Navigate to="/" />} />
-            <Route path="/student/workspace/:id" element={profile?.role === 'Student' ? <Workspace /> : <Navigate to="/" />} />
-            <Route path="/student/submissions" element={profile?.role === 'Student' ? <Submissions /> : <Navigate to="/" />} />
-            <Route path="/student/progress" element={profile?.role === 'Student' ? <Progress /> : <Navigate to="/" />} />
-            <Route path="/student/playground" element={profile?.role === 'Student' ? <Playground /> : <Navigate to="/" />} />
+              {/* Student */}
+              <Route path="/student/dashboard" element={profile?.role === 'Student' ? <StudentDashboard /> : <Navigate to="/" />} />
+              <Route path="/student/assignments" element={profile?.role === 'Student' ? <Assignments /> : <Navigate to="/" />} />
+              <Route path="/student/assignmentdetail/:id" element={profile?.role === 'Student' ? <AssignmentDetail /> : <Navigate to="/" />} />
+              <Route path="/student/workspace/:id" element={profile?.role === 'Student' ? <Workspace /> : <Navigate to="/" />} />
+              <Route path="/student/submissions" element={profile?.role === 'Student' ? <Submissions /> : <Navigate to="/" />} />
+              <Route path="/student/progress" element={profile?.role === 'Student' ? <Progress /> : <Navigate to="/" />} />
+              <Route path="/student/playground" element={profile?.role === 'Student' ? <Playground /> : <Navigate to="/" />} />
 
-            {/* 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              {/* 404 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          )}
         </main>
       </div>
     </Router>

@@ -145,11 +145,8 @@ export default function Assignments() {
   // ── Problem destination ─────────────────────────────────────────────────────
   const problemLink = (p) => `/student/assignmentdetail/${p.id}`;
 
-  if (loading) return (
-    <div className="flex justify-center py-20">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary" />
-    </div>
-  );
+  // Soft loading check
+  const isDataReady = !loading || apiProblems.length > 0;
 
   return (
     <div className="space-y-8 animate-fade-in-up max-w-7xl mx-auto">
@@ -311,7 +308,7 @@ export default function Assignments() {
       )}
 
       {/* ── Empty state ── */}
-      {filtered.length === 0 && (
+      {isDataReady && filtered.length === 0 && (
         <div className="py-24 text-center glass-card rounded-3xl space-y-4">
           <div className="text-3xl sm:text-5xl">🔍</div>
           <h3 className="text-lg font-bold text-gray-400">No problems match your filters</h3>
@@ -323,84 +320,90 @@ export default function Assignments() {
       )}
 
       {/* ── GRID VIEW ── */}
-      {viewMode === 'grid' && filtered.length > 0 && (
+      {viewMode === 'grid' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map(p => {
-            const status = statusOf(p);
-            const diff = DIFF_CONFIG[p.proficiency_level] || DIFF_CONFIG.Beginner;
-            const workspaceLink = `/student/workspace/${p.id}`;
-            return (
-              <div key={p.id} className="glass-card rounded-2xl p-4 sm:p-6 space-y-4 hover:-translate-y-1.5 transition-all duration-200 group relative overflow-hidden flex flex-col">
-                {/* Background glow */}
-                <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-10 transition-opacity ${diff.bg}`} />
-
-                {/* Top row */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center shrink-0 ${diff.ring}`}>
-                    <span className="text-xl">{LANG_ICONS[p.language] || '💻'}</span>
+          {!isDataReady ? (
+            [...Array(6)].map((_, i) => (
+              <div key={i} className="glass-card rounded-2xl p-6 h-64 animate-pulse bg-white/5"></div>
+            ))
+          ) : (
+            filtered.map(p => {
+              const status = statusOf(p);
+              const diff = DIFF_CONFIG[p.proficiency_level] || DIFF_CONFIG.Beginner;
+              const workspaceLink = `/student/workspace/${p.id}`;
+              return (
+                <div key={p.id} className="glass-card rounded-2xl p-4 sm:p-6 space-y-4 hover:-translate-y-1.5 transition-all duration-200 group relative overflow-hidden flex flex-col">
+                  {/* Background glow */}
+                  <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-10 transition-opacity ${diff.bg}`} />
+  
+                  {/* Top row */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center shrink-0 ${diff.ring}`}>
+                      <span className="text-xl">{LANG_ICONS[p.language] || '💻'}</span>
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5">
+                      {status === 'Solved' && (
+                        <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">
+                          <CheckCircle2 size={9} /> Solved
+                        </span>
+                      )}
+                      {status === 'Attempted' && (
+                        <span className="flex items-center gap-1 text-[10px] font-bold bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full">
+                          <Clock size={9} /> Attempted
+                        </span>
+                      )}
+                      {status === 'New' && (
+                        <span className="flex items-center gap-1 text-[10px] font-bold bg-primary/10 text-primary-light px-2 py-0.5 rounded-full">
+                          <Sparkles size={9} /> New
+                        </span>
+                      )}
+                      <span className="text-[11px] font-bold bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                        <Trophy size={10} /> {p.points} pts
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1.5">
-                    {status === 'Solved' && (
-                      <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">
-                        <CheckCircle2 size={9} /> Solved
-                      </span>
-                    )}
-                    {status === 'Attempted' && (
-                      <span className="flex items-center gap-1 text-[10px] font-bold bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full">
-                        <Clock size={9} /> Attempted
-                      </span>
-                    )}
-                    {status === 'New' && (
-                      <span className="flex items-center gap-1 text-[10px] font-bold bg-primary/10 text-primary-light px-2 py-0.5 rounded-full">
-                        <Sparkles size={9} /> New
-                      </span>
-                    )}
-                    <span className="text-[11px] font-bold bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg flex items-center gap-1">
-                      <Trophy size={10} /> {p.points} pts
+  
+                  {/* Title + description */}
+                  <div className="flex-1">
+                    <h3 className="font-black text-base group-hover:text-primary-light transition-colors">{p.title}</h3>
+                    <p className="text-xs text-gray-500 mt-2 line-clamp-2 leading-relaxed">{p.description}</p>
+                  </div>
+  
+                  {/* Tags row */}
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${diff.bg} ${diff.color}`}>
+                      {p.proficiency_level}
                     </span>
+                    <span className="text-[10px] font-semibold bg-white/5 text-gray-400 px-2 py-0.5 rounded-full">
+                      {p.language}
+                    </span>
+                    {p.category && (
+                      <span className="text-[10px] font-semibold bg-white/5 text-gray-500 px-2 py-0.5 rounded-full">
+                        {p.category}
+                      </span>
+                    )}
+                  </div>
+  
+                  {/* Action buttons */}
+                  <div className="grid grid-cols-2 gap-2 pt-3 border-t border-white/5">
+                    <Link to={problemLink(p)}
+                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all">
+                      <ArrowRight size={12} /> View Problem
+                    </Link>
+                    <Link to={workspaceLink}
+                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold btn-primary text-white transition-all shadow-lg shadow-primary/20">
+                      <Send size={12} /> Submit
+                    </Link>
                   </div>
                 </div>
-
-                {/* Title + description */}
-                <div className="flex-1">
-                  <h3 className="font-black text-base group-hover:text-primary-light transition-colors">{p.title}</h3>
-                  <p className="text-xs text-gray-500 mt-2 line-clamp-2 leading-relaxed">{p.description}</p>
-                </div>
-
-                {/* Tags row */}
-                <div className="flex flex-wrap gap-1.5">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${diff.bg} ${diff.color}`}>
-                    {p.proficiency_level}
-                  </span>
-                  <span className="text-[10px] font-semibold bg-white/5 text-gray-400 px-2 py-0.5 rounded-full">
-                    {p.language}
-                  </span>
-                  {p.category && (
-                    <span className="text-[10px] font-semibold bg-white/5 text-gray-500 px-2 py-0.5 rounded-full">
-                      {p.category}
-                    </span>
-                  )}
-                </div>
-
-                {/* Action buttons */}
-                <div className="grid grid-cols-2 gap-2 pt-3 border-t border-white/5">
-                  <Link to={problemLink(p)}
-                    className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all">
-                    <ArrowRight size={12} /> View Problem
-                  </Link>
-                  <Link to={workspaceLink}
-                    className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold btn-primary text-white transition-all shadow-lg shadow-primary/20">
-                    <Send size={12} /> Submit
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       )}
 
       {/* ── LIST VIEW ── */}
-      {viewMode === 'list' && filtered.length > 0 && (
+      {viewMode === 'list' && (
         <div className="space-y-2">
           {/* Header row */}
           <div className="hidden md:grid grid-cols-[2.5rem_1fr_6rem_5rem_4rem_4rem_5rem_9rem] items-center gap-4 px-5 pb-2 text-[10px] text-gray-600 font-bold uppercase tracking-wider">
@@ -413,52 +416,58 @@ export default function Assignments() {
             <div>Status</div>
             <div>Actions</div>
           </div>
-          {filtered.map((p, i) => {
-            const status = statusOf(p);
-            const diff = DIFF_CONFIG[p.proficiency_level] || DIFF_CONFIG.Beginner;
-            const workspaceLink = `/student/workspace/${p.id}`;
-            return (
-              <div key={p.id}
-                className="glass-card rounded-xl px-5 py-4 grid grid-cols-1 md:grid-cols-[2.5rem_1fr_6rem_5rem_4rem_4rem_5rem_9rem] items-center gap-4 hover:bg-white/[0.04] transition-all group">
-                {/* Index */}
-                <span className="hidden md:block text-sm font-bold text-gray-600">{i + 1}</span>
-                {/* Title */}
-                <Link to={problemLink(p)} className="hover:text-primary-light transition-colors">
-                  <h3 className="font-bold text-sm">{p.title}</h3>
-                  <p className="text-[11px] text-gray-600 mt-0.5 line-clamp-1 md:hidden">{p.language} • {p.proficiency_level} • {p.points} pts</p>
-                </Link>
-                {/* Category */}
-                <span className="hidden md:inline-block text-[11px] text-gray-500 font-medium">{p.category || '—'}</span>
-                {/* Language */}
-                <span className="hidden md:flex items-center gap-1 text-[11px] text-gray-400 font-semibold">
-                  {LANG_ICONS[p.language]} {p.language}
-                </span>
-                {/* Difficulty */}
-                <span className={`hidden md:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full w-fit ${diff.bg} ${diff.color}`}>
-                  {p.proficiency_level}
-                </span>
-                {/* Points */}
-                <span className="hidden md:inline-block text-[11px] font-bold text-amber-400">{p.points} pts</span>
-                {/* Status */}
-                <div className="hidden md:flex items-center gap-1.5">
-                  {status === 'Solved' && <><div className="w-2 h-2 rounded-full bg-emerald-400" /><span className="text-[10px] text-emerald-400 font-bold">Solved</span></>}
-                  {status === 'Attempted' && <><div className="w-2 h-2 rounded-full bg-amber-400" /><span className="text-[10px] text-amber-400 font-bold">Attempted</span></>}
-                  {status === 'New' && <><div className="w-2 h-2 rounded-full bg-gray-600" /><span className="text-[10px] text-gray-500 font-bold">New</span></>}
-                </div>
-                {/* Action buttons */}
-                <div className="flex mt-3 md:mt-0 items-center justify-end md:justify-start gap-2 md:gap-1.5">
-                  <Link to={problemLink(p)}
-                    className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1">
-                    <ArrowRight size={10} /> View
+          {!isDataReady ? (
+            [...Array(6)].map((_, i) => (
+              <div key={i} className="glass-card rounded-xl px-5 py-6 h-16 animate-pulse bg-white/5"></div>
+            ))
+          ) : (
+            filtered.map((p, i) => {
+              const status = statusOf(p);
+              const diff = DIFF_CONFIG[p.proficiency_level] || DIFF_CONFIG.Beginner;
+              const workspaceLink = `/student/workspace/${p.id}`;
+              return (
+                <div key={p.id}
+                  className="glass-card rounded-xl px-5 py-4 grid grid-cols-1 md:grid-cols-[2.5rem_1fr_6rem_5rem_4rem_4rem_5rem_9rem] items-center gap-4 hover:bg-white/[0.04] transition-all group">
+                  {/* Index */}
+                  <span className="hidden md:block text-sm font-bold text-gray-600">{i + 1}</span>
+                  {/* Title */}
+                  <Link to={problemLink(p)} className="hover:text-primary-light transition-colors">
+                    <h3 className="font-bold text-sm">{p.title}</h3>
+                    <p className="text-[11px] text-gray-600 mt-0.5 line-clamp-1 md:hidden">{p.language} • {p.proficiency_level} • {p.points} pts</p>
                   </Link>
-                  <Link to={workspaceLink}
-                    className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold btn-primary text-white transition-all flex items-center gap-1 shadow-sm shadow-primary/20">
-                    <Send size={10} /> Submit
-                  </Link>
+                  {/* Category */}
+                  <span className="hidden md:inline-block text-[11px] text-gray-500 font-medium">{p.category || '—'}</span>
+                  {/* Language */}
+                  <span className="hidden md:flex items-center gap-1 text-[11px] text-gray-400 font-semibold">
+                    {LANG_ICONS[p.language]} {p.language}
+                  </span>
+                  {/* Difficulty */}
+                  <span className={`hidden md:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full w-fit ${diff.bg} ${diff.color}`}>
+                    {p.proficiency_level}
+                  </span>
+                  {/* Points */}
+                  <span className="hidden md:inline-block text-[11px] font-bold text-amber-400">{p.points} pts</span>
+                  {/* Status */}
+                  <div className="hidden md:flex items-center gap-1.5">
+                    {status === 'Solved' && <><div className="w-2 h-2 rounded-full bg-emerald-400" /><span className="text-[10px] text-emerald-400 font-bold">Solved</span></>}
+                    {status === 'Attempted' && <><div className="w-2 h-2 rounded-full bg-amber-400" /><span className="text-[10px] text-amber-400 font-bold">Attempted</span></>}
+                    {status === 'New' && <><div className="w-2 h-2 rounded-full bg-gray-600" /><span className="text-[10px] text-gray-500 font-bold">New</span></>}
+                  </div>
+                  {/* Action buttons */}
+                  <div className="flex mt-3 md:mt-0 items-center justify-end md:justify-start gap-2 md:gap-1.5">
+                    <Link to={problemLink(p)}
+                      className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1">
+                      <ArrowRight size={10} /> View
+                    </Link>
+                    <Link to={workspaceLink}
+                      className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold btn-primary text-white transition-all flex items-center gap-1 shadow-sm shadow-primary/20">
+                      <Send size={10} /> Submit
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       )}
 

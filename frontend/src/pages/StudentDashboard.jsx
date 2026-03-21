@@ -151,7 +151,8 @@ export default function StudentDashboard() {
   // Daily challenge = first unsolved assignment
   const dailyChallenge = assignments.find(a => !isSolved(a.id));
 
-  if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div></div>;
+  // Soft loading check
+  const isDataReady = !loading || profile;
 
   return (
     <div className="space-y-8 animate-fade-in-up">
@@ -173,62 +174,72 @@ export default function StudentDashboard() {
         </div>
       )}
       {/* Profile Header */}
-      <div className="glass-card rounded-2xl p-4 sm:p-8 flex flex-col md:flex-row items-start md:items-center gap-4 sm:gap-6 relative overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div className="relative z-10 w-20 h-20 bg-gradient-to-br from-primary to-accent rounded-3xl flex items-center justify-center text-2xl sm:text-3xl font-black text-white shrink-0 shadow-lg shadow-primary/20">
-          {profile?.name?.charAt(0) || '?'}
+      {!isDataReady ? (
+        <div className="glass-card rounded-2xl p-8 flex animate-pulse items-center gap-6">
+          <div className="w-20 h-20 bg-white/5 rounded-3xl"></div>
+          <div className="flex-1 space-y-3">
+             <div className="h-4 w-24 bg-white/5 rounded"></div>
+             <div className="h-8 w-48 bg-white/5 rounded"></div>
+          </div>
         </div>
-        <div className="relative z-10 flex-1">
-          <p className="text-primary-light text-xs font-black uppercase tracking-[0.2em] mb-1">Welcome Back,</p>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-3">
-            {profile?.name || 'Student'}
-            <Sparkles size={20} className="text-amber-400 animate-pulse" />
-          </h1>
-          <div className="flex items-center gap-4 mt-2">
-            <p className="text-gray-500 text-sm flex items-center gap-1.5 font-medium">
-              <Building2 size={13} /> {profile?.department || 'Department'}
-            </p>
-            <p className="text-gray-500 text-sm flex items-center gap-1.5 font-medium">
-              <BookOpen size={13} /> {profile?.academic_year || 'Year'}
-            </p>
-            <Link to="/profile" className="text-primary-light hover:text-white transition-colors text-xs font-bold flex items-center gap-1 ml-2 border-l border-white/10 pl-4">
-              Edit Profile <ArrowRight size={12} />
+      ) : (
+        <div className="glass-card rounded-2xl p-4 sm:p-8 flex flex-col md:flex-row items-start md:items-center gap-4 sm:gap-6 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="relative z-10 w-20 h-20 bg-gradient-to-br from-primary to-accent rounded-3xl flex items-center justify-center text-2xl sm:text-3xl font-black text-white shrink-0 shadow-lg shadow-primary/20">
+            {profile?.name?.charAt(0) || '?'}
+          </div>
+          <div className="relative z-10 flex-1">
+            <p className="text-primary-light text-xs font-black uppercase tracking-[0.2em] mb-1">Welcome Back,</p>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-3">
+              {profile?.name || 'Student'}
+              <Sparkles size={20} className="text-amber-400 animate-pulse" />
+            </h1>
+            <div className="flex items-center gap-4 mt-2">
+              <p className="text-gray-500 text-sm flex items-center gap-1.5 font-medium">
+                <Building2 size={13} /> {profile?.department || 'Department'}
+              </p>
+              <p className="text-gray-500 text-sm flex items-center gap-1.5 font-medium">
+                <BookOpen size={13} /> {profile?.academic_year || 'Year'}
+              </p>
+              <Link to="/profile" className="text-primary-light hover:text-white transition-colors text-xs font-bold flex items-center gap-1 ml-2 border-l border-white/10 pl-4">
+                Edit Profile <ArrowRight size={12} />
+              </Link>
+            </div>
+          </div>
+          <div className="relative z-10 flex flex-col items-start gap-1 mr-2 mt-4 md:mt-0">
+            {(() => { const lvl = getLevel(profile?.total_points || 0); return (
+              <span className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 ${lvl.color}`}>
+                <Shield size={10} /> Lv.{lvl.level} {lvl.label}
+              </span>
+            ); })()}
+          </div>
+          <div className="relative z-10 flex flex-wrap justify-center items-center gap-4 bg-white/5 p-4 rounded-3xl border border-white/5 w-full md:w-auto">
+            <div className="text-center px-4">
+              <p className="text-2xl font-black text-white">{solvedCount}</p>
+              <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Solved</p>
+            </div>
+            <Link to="/student/submissions" className="text-center px-4 border-l border-r border-white/10 hover:bg-white/5 transition-colors cursor-pointer block">
+              <p className="text-2xl font-black text-white">{totalSubmissions}</p>
+              <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Attempts</p>
             </Link>
-          </div>
-        </div>
-        <div className="relative z-10 flex flex-col items-start gap-1 mr-2 mt-4 md:mt-0">
-          {(() => { const lvl = getLevel(profile?.total_points || 0); return (
-            <span className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 ${lvl.color}`}>
-              <Shield size={10} /> Lv.{lvl.level} {lvl.label}
-            </span>
-          ); })()}
-        </div>
-        <div className="relative z-10 flex flex-wrap justify-center items-center gap-4 bg-white/5 p-4 rounded-3xl border border-white/5 w-full md:w-auto">
-          <div className="text-center px-4">
-            <p className="text-2xl font-black text-white">{solvedCount}</p>
-            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Solved</p>
-          </div>
-          <Link to="/student/submissions" className="text-center px-4 border-l border-r border-white/10 hover:bg-white/5 transition-colors cursor-pointer block">
-            <p className="text-2xl font-black text-white">{totalSubmissions}</p>
-            <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Attempts</p>
-          </Link>
-          <div className="text-center px-4 border-r border-white/10">
-            <p className="text-2xl font-black text-white">{inProgressCount}</p>
-            <p className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">In Progress</p>
-          </div>
-          <div className="text-center px-4 border-r border-white/10">
-            <p className="text-2xl font-black text-white">{totalAssignments}</p>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total</p>
-          </div>
-          <div className="flex items-center gap-3 bg-gradient-to-r from-primary/20 to-accent/10 px-5 py-3 rounded-2xl border border-white/10">
-            <Trophy size={22} className="text-amber-400" />
-            <div className="text-left">
-              <p className="text-2xl font-black text-white leading-tight">{profile?.total_points || 0}</p>
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Pts</p>
+            <div className="text-center px-4 border-r border-white/10">
+              <p className="text-2xl font-black text-white">{inProgressCount}</p>
+              <p className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">In Progress</p>
+            </div>
+            <div className="text-center px-4 border-r border-white/10">
+              <p className="text-2xl font-black text-white">{totalAssignments}</p>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total</p>
+            </div>
+            <div className="flex items-center gap-3 bg-gradient-to-r from-primary/20 to-accent/10 px-5 py-3 rounded-2xl border border-white/10">
+              <Trophy size={22} className="text-amber-400" />
+              <div className="text-left">
+                <p className="text-2xl font-black text-white leading-tight">{profile?.total_points || 0}</p>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Pts</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Quick Links */}
       {(() => {
@@ -313,50 +324,56 @@ export default function StudentDashboard() {
         {/* Left: Assignments List */}
         <div className="lg:col-span-3 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {paginatedAssignments.map(a => {
-              const solved = isSolved(a.id);
-              const attempted = isAttempted(a.id);
-              return (
-                <div key={a.id} className={`glass-card rounded-2xl p-4 sm:p-6 space-y-4 group hover:-translate-y-1 transition-all duration-300 relative ${solved ? 'border-emerald-500/20' : ''}`}>
-                  <div className="absolute top-4 right-4 flex items-center gap-1.5">
-                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleBookmark(a.id); }}
-                      className={`p-1.5 rounded-lg transition-all ${bookmarks.includes(a.id) ? 'text-amber-400 bg-amber-500/10' : 'text-gray-600 hover:text-amber-400 hover:bg-amber-500/10'}`}>
-                      <Bookmark size={14} fill={bookmarks.includes(a.id) ? 'currentColor' : 'none'} />
-                    </button>
-                    {solved && <CheckCircle2 size={18} className="text-emerald-400" />}
-                    {attempted && !solved && <Clock size={16} className="text-amber-400" />}
-                  </div>
-                  <div className="flex items-start justify-between">
-                      <div className="bg-gradient-to-br from-primary/15 to-accent/5 w-11 h-11 rounded-xl flex items-center justify-center">
-                        <Code2 size={20} className="text-primary-light" />
+            {!isDataReady ? (
+               [...Array(4)].map((_, i) => (
+                 <div key={i} className="glass-card rounded-2xl p-6 h-48 animate-pulse bg-white/5"></div>
+               ))
+            ) : (
+              paginatedAssignments.map(a => {
+                const solved = isSolved(a.id);
+                const attempted = isAttempted(a.id);
+                return (
+                  <div key={a.id} className={`glass-card rounded-2xl p-4 sm:p-6 space-y-4 group hover:-translate-y-1 transition-all duration-300 relative ${solved ? 'border-emerald-500/20' : ''}`}>
+                    <div className="absolute top-4 right-4 flex items-center gap-1.5">
+                      <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleBookmark(a.id); }}
+                        className={`p-1.5 rounded-lg transition-all ${bookmarks.includes(a.id) ? 'text-amber-400 bg-amber-500/10' : 'text-gray-600 hover:text-amber-400 hover:bg-amber-500/10'}`}>
+                        <Bookmark size={14} fill={bookmarks.includes(a.id) ? 'currentColor' : 'none'} />
+                      </button>
+                      {solved && <CheckCircle2 size={18} className="text-emerald-400" />}
+                      {attempted && !solved && <Clock size={16} className="text-amber-400" />}
+                    </div>
+                    <div className="flex items-start justify-between">
+                        <div className="bg-gradient-to-br from-primary/15 to-accent/5 w-11 h-11 rounded-xl flex items-center justify-center">
+                          <Code2 size={20} className="text-primary-light" />
+                        </div>
+                        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1 ${levelColor(a.proficiency_level)}`}>
+                          {levelIcon(a.proficiency_level)} {a.proficiency_level}
+                        </span>
                       </div>
-                      <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1 ${levelColor(a.proficiency_level)}`}>
-                        {levelIcon(a.proficiency_level)} {a.proficiency_level}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="text-base font-bold text-white group-hover:text-primary-light transition-colors">{a.title}</h3>
-                      <p className="text-gray-500 text-sm mt-1.5 line-clamp-2">{a.description || 'No description provided.'}</p>
-                    </div>
-                    <div className="flex gap-2 flex-wrap pt-2 border-t border-white/5">
-                      <span className="text-[11px] font-semibold bg-white/5 text-gray-400 px-2.5 py-1 rounded-lg">{a.language}</span>
-                      <span className="text-[11px] font-semibold bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg">{a.points} pts</span>
-                      {a.category && <span className="text-[10px] font-bold bg-violet-500/10 text-violet-400 px-2 py-0.5 rounded-lg flex items-center gap-1"><Tag size={8} /> {a.category}</span>}
-                    </div>
-                    {/* Action buttons */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <Link to={`/student/assignmentdetail/${a.id}`}
-                        className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all">
-                        <ArrowRight size={12} /> View Details
-                      </Link>
-                      <Link to={`/student/workspace/${a.id}`}
-                        className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold btn-primary text-white transition-all shadow-lg shadow-primary/20">
-                        <Send size={12} /> Submit
-                      </Link>
-                    </div>
-                </div>
-              );
-            })}
+                      <div>
+                        <h3 className="text-base font-bold text-white group-hover:text-primary-light transition-colors">{a.title}</h3>
+                        <p className="text-gray-500 text-sm mt-1.5 line-clamp-2">{a.description || 'No description provided.'}</p>
+                      </div>
+                      <div className="flex gap-2 flex-wrap pt-2 border-t border-white/5">
+                        <span className="text-[11px] font-semibold bg-white/5 text-gray-400 px-2.5 py-1 rounded-lg">{a.language}</span>
+                        <span className="text-[11px] font-semibold bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg">{a.points} pts</span>
+                        {a.category && <span className="text-[10px] font-bold bg-violet-500/10 text-violet-400 px-2 py-0.5 rounded-lg flex items-center gap-1"><Tag size={8} /> {a.category}</span>}
+                      </div>
+                      {/* Action buttons */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <Link to={`/student/assignmentdetail/${a.id}`}
+                          className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all">
+                          <ArrowRight size={12} /> View Details
+                        </Link>
+                        <Link to={`/student/workspace/${a.id}`}
+                          className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold btn-primary text-white transition-all shadow-lg shadow-primary/20">
+                          <Send size={12} /> Submit
+                        </Link>
+                      </div>
+                  </div>
+                );
+              })
+            )}
           </div>
 
           {filtered.length === 0 && (

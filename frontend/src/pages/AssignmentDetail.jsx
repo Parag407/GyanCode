@@ -121,11 +121,8 @@ export default function AssignmentDetail() {
     }
   };
 
-  if (loading) return (
-    <div className="flex justify-center py-20">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary" />
-    </div>
-  );
+  // Soft loading check
+  const isDataReady = !loading || (id ? !!data : assignments.length > 0);
 
   // ──────────────────────── LIST VIEW ──────────────────────────
   const diffRing = (level) => {
@@ -179,30 +176,36 @@ export default function AssignmentDetail() {
 
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {sortedAssignments.map(a => (
-              <Link key={a.id} to={userRole === 'Educator' ? `/educator/assignment/${a.id}` : `/student/assignmentdetail/${a.id}`}
-                className="glass-card rounded-2xl p-4 sm:p-6 space-y-4 hover:-translate-y-1 transition-all group">
-                <div className="flex items-start justify-between">
-                  <div className={`w-11 h-11 rounded-xl border-2 flex items-center justify-center text-lg ${diffRing(a.proficiency_level)}`}>
-                    {LANG_ICONS[a.language] || '💻'}
+            {!isDataReady ? (
+              [...Array(6)].map((_, i) => (
+                <div key={i} className="glass-card rounded-2xl p-6 h-48 animate-pulse bg-white/5"></div>
+              ))
+            ) : (
+              sortedAssignments.map(a => (
+                <Link key={a.id} to={userRole === 'Educator' ? `/educator/assignment/${a.id}` : `/student/assignmentdetail/${a.id}`}
+                  className="glass-card rounded-2xl p-4 sm:p-6 space-y-4 hover:-translate-y-1 transition-all group">
+                  <div className="flex items-start justify-between">
+                    <div className={`w-11 h-11 rounded-xl border-2 flex items-center justify-center text-lg ${diffRing(a.proficiency_level)}`}>
+                      {LANG_ICONS[a.language] || '💻'}
+                    </div>
+                    <span className="text-[11px] font-bold bg-amber-500/10 text-amber-400 px-3 py-1 rounded-lg flex items-center gap-1">
+                      <Trophy size={10} /> {a.points} pts
+                    </span>
                   </div>
-                  <span className="text-[11px] font-bold bg-amber-500/10 text-amber-400 px-3 py-1 rounded-lg flex items-center gap-1">
-                    <Trophy size={10} /> {a.points} pts
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold group-hover:text-primary-light transition-colors">{a.title}</h3>
-                  <p className="text-sm text-gray-500 mt-2 line-clamp-2">{a.description}</p>
-                </div>
-                <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                  <span className="text-xs font-semibold text-gray-400">{a.language} • {a.proficiency_level}</span>
-                  <span className="text-xs font-bold text-primary-light flex items-center gap-1">
-                    {userRole === 'Educator' ? 'View Submissions' : 'View & Solve'} <ArrowRight size={14} />
-                  </span>
-                </div>
-              </Link>
-            ))}
-            {assignments.length === 0 && (
+                  <div>
+                    <h3 className="text-lg font-bold group-hover:text-primary-light transition-colors">{a.title}</h3>
+                    <p className="text-sm text-gray-500 mt-2 line-clamp-2">{a.description}</p>
+                  </div>
+                  <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                    <span className="text-xs font-semibold text-gray-400">{a.language} • {a.proficiency_level}</span>
+                    <span className="text-xs font-bold text-primary-light flex items-center gap-1">
+                      {userRole === 'Educator' ? 'View Submissions' : 'View & Solve'} <ArrowRight size={14} />
+                    </span>
+                  </div>
+                </Link>
+              ))
+            )}
+            {isDataReady && assignments.length === 0 && (
               <div className="col-span-full py-20 text-center glass-card rounded-3xl">
                 <p className="text-gray-500">No assignments found. Please contact your educator.</p>
               </div>
@@ -210,21 +213,27 @@ export default function AssignmentDetail() {
           </div>
         ) : (
           <div className="space-y-3">
-            {sortedAssignments.map(a => (
-              <Link key={a.id} to={userRole === 'Educator' ? `/educator/assignment/${a.id}` : `/student/assignmentdetail/${a.id}`}
-                className="glass-card rounded-xl px-4 sm:px-6 py-4 flex items-center gap-5 hover:bg-white/[0.03] transition-all group">
-                <div className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center shrink-0 text-base ${diffRing(a.proficiency_level)}`}>
-                  {LANG_ICONS[a.language] || '💻'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-sm group-hover:text-primary-light transition-colors truncate">{a.title}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">{a.language} • {a.proficiency_level}</p>
-                </div>
-                <span className="text-[11px] font-bold bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg shrink-0">{a.points} pts</span>
-                <ArrowRight size={14} className="text-gray-600 group-hover:text-primary-light group-hover:translate-x-1 transition-all shrink-0" />
-              </Link>
-            ))}
-            {assignments.length === 0 && (
+            {!isDataReady ? (
+              [...Array(6)].map((_, i) => (
+                <div key={i} className="glass-card rounded-xl px-6 py-4 h-16 animate-pulse bg-white/5"></div>
+              ))
+            ) : (
+              sortedAssignments.map(a => (
+                <Link key={a.id} to={userRole === 'Educator' ? `/educator/assignment/${a.id}` : `/student/assignmentdetail/${a.id}`}
+                  className="glass-card rounded-xl px-4 sm:px-6 py-4 flex items-center gap-5 hover:bg-white/[0.03] transition-all group">
+                  <div className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center shrink-0 text-base ${diffRing(a.proficiency_level)}`}>
+                    {LANG_ICONS[a.language] || '💻'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-sm group-hover:text-primary-light transition-colors truncate">{a.title}</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">{a.language} • {a.proficiency_level}</p>
+                  </div>
+                  <span className="text-[11px] font-bold bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg shrink-0">{a.points} pts</span>
+                  <ArrowRight size={14} className="text-gray-600 group-hover:text-primary-light group-hover:translate-x-1 transition-all shrink-0" />
+                </Link>
+              ))
+            )}
+            {isDataReady && assignments.length === 0 && (
               <div className="py-20 text-center glass-card rounded-3xl">
                 <p className="text-gray-500">No assignments found.</p>
               </div>
@@ -262,131 +271,144 @@ export default function AssignmentDetail() {
         </button>
 
         {/* Header Card */}
-        <div className="glass-card rounded-3xl p-4 sm:p-8 space-y-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
-
-          <div className="relative flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        {!isDataReady ? (
+          <div className="glass-card rounded-3xl p-8 animate-pulse space-y-6">
             <div className="flex items-center gap-5">
-              <div className={`w-16 h-16 rounded-2xl border-2 flex items-center justify-center text-2xl sm:text-3xl ${diff.border} ${diff.bg}`}>
-                {LANG_ICONS[assignment.language] || '💻'}
+              <div className="w-16 h-16 bg-white/5 rounded-2xl"></div>
+              <div className="space-y-2">
+                <div className="h-8 w-64 bg-white/5 rounded"></div>
+                <div className="h-4 w-48 bg-white/5 rounded"></div>
               </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{assignment.title}</h1>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <span className="text-xs font-bold bg-white/5 text-gray-400 px-3 py-1 rounded-lg">{assignment.language}</span>
-                  <span className={`text-xs font-bold px-3 py-1 rounded-lg ${diff.bg} ${diff.color}`}>{assignment.proficiency_level}</span>
-                  <span className="text-xs font-bold bg-amber-500/10 text-amber-400 px-3 py-1 rounded-lg flex items-center gap-1">
-                    <Trophy size={11} /> {assignment.points} Points
-                  </span>
-                  {assignment.category && (
-                    <span className="text-xs font-bold bg-white/5 text-gray-400 px-3 py-1 rounded-lg flex items-center gap-1">
-                      <Tag size={11} /> {assignment.category}
+            </div>
+            <div className="h-20 w-full bg-white/5 rounded"></div>
+          </div>
+        ) : (
+          <div className="glass-card rounded-3xl p-4 sm:p-8 space-y-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
+  
+            <div className="relative flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+              <div className="flex items-center gap-5">
+                <div className={`w-16 h-16 rounded-2xl border-2 flex items-center justify-center text-2xl sm:text-3xl ${diff.border} ${diff.bg}`}>
+                  {LANG_ICONS[assignment.language] || '💻'}
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{assignment.title}</h1>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="text-xs font-bold bg-white/5 text-gray-400 px-3 py-1 rounded-lg">{assignment.language}</span>
+                    <span className={`text-xs font-bold px-3 py-1 rounded-lg ${diff.bg} ${diff.color}`}>{assignment.proficiency_level}</span>
+                    <span className="text-xs font-bold bg-amber-500/10 text-amber-400 px-3 py-1 rounded-lg flex items-center gap-1">
+                      <Trophy size={11} /> {assignment.points} Points
                     </span>
+                    {assignment.category && (
+                      <span className="text-xs font-bold bg-white/5 text-gray-400 px-3 py-1 rounded-lg flex items-center gap-1">
+                        <Tag size={11} /> {assignment.category}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+  
+              {/* Deadline badge */}
+              {assignment.deadline && (
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold shrink-0 ${
+                  isExpired ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                }`}>
+                  <CalendarClock size={16} />
+                  <div>
+                    <p className="text-[10px] uppercase font-bold opacity-70">Deadline</p>
+                    <p>{new Date(assignment.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                  </div>
+                  {isExpired && <AlertCircle size={16} className="ml-1" />}
+                </div>
+              )}
+            </div>
+  
+            {/* Description */}
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase text-gray-500 tracking-widest">Problem Statement</p>
+              <p className="text-gray-300 leading-relaxed">{assignment.description}</p>
+            </div>
+  
+            {/* Starter Code */}
+            {assignment.starter_code && (
+              <div className="space-y-2">
+                <p className="text-[11px] font-bold uppercase text-gray-500 tracking-widest flex items-center gap-1.5">
+                  <Code2 size={12} /> Starter Code
+                </p>
+                <pre className="bg-black/30 border border-white/5 rounded-xl p-4 text-sm font-mono text-gray-300 overflow-x-auto leading-relaxed">
+                  {assignment.starter_code}
+                </pre>
+              </div>
+            )}
+  
+            {/* Public Test Cases */}
+            {publicTests.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-[11px] font-bold uppercase text-gray-500 tracking-widest">Example Test Cases</p>
+                <div className="grid gap-3">
+                  {publicTests.map((tc, i) => (
+                    <div key={i} className="bg-white/[0.03] border border-white/5 rounded-xl p-4 grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-600 uppercase mb-1">Input</p>
+                        <pre className="text-sm font-mono text-emerald-300 whitespace-pre-wrap">{tc.input || '(none)'}</pre>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-600 uppercase mb-1">Expected Output</p>
+                        <pre className="text-sm font-mono text-primary-light whitespace-pre-wrap">{tc.output}</pre>
+                      </div>
+                    </div>
+                  ))}
+                  {testCases.some(tc => tc.is_hidden) && (
+                    <p className="text-xs text-gray-600 flex items-center gap-1.5">
+                      <AlertCircle size={12} />
+                      {testCases.filter(tc => tc.is_hidden).length} hidden test case(s) will also be evaluated on submission.
+                    </p>
                   )}
                 </div>
               </div>
-            </div>
-
-            {/* Deadline badge */}
-            {assignment.deadline && (
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold shrink-0 ${
-                isExpired ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-              }`}>
-                <CalendarClock size={16} />
-                <div>
-                  <p className="text-[10px] uppercase font-bold opacity-70">Deadline</p>
-                  <p>{new Date(assignment.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                </div>
-                {isExpired && <AlertCircle size={16} className="ml-1" />}
-              </div>
             )}
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <p className="text-[11px] font-bold uppercase text-gray-500 tracking-widest">Problem Statement</p>
-            <p className="text-gray-300 leading-relaxed">{assignment.description}</p>
-          </div>
-
-          {/* Starter Code */}
-          {assignment.starter_code && (
-            <div className="space-y-2">
-              <p className="text-[11px] font-bold uppercase text-gray-500 tracking-widest flex items-center gap-1.5">
-                <Code2 size={12} /> Starter Code
-              </p>
-              <pre className="bg-black/30 border border-white/5 rounded-xl p-4 text-sm font-mono text-gray-300 overflow-x-auto leading-relaxed">
-                {assignment.starter_code}
-              </pre>
-            </div>
-          )}
-
-          {/* Public Test Cases */}
-          {publicTests.length > 0 && (
-            <div className="space-y-3">
-              <p className="text-[11px] font-bold uppercase text-gray-500 tracking-widest">Example Test Cases</p>
-              <div className="grid gap-3">
-                {publicTests.map((tc, i) => (
-                  <div key={i} className="bg-white/[0.03] border border-white/5 rounded-xl p-4 grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-600 uppercase mb-1">Input</p>
-                      <pre className="text-sm font-mono text-emerald-300 whitespace-pre-wrap">{tc.input || '(none)'}</pre>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-600 uppercase mb-1">Expected Output</p>
-                      <pre className="text-sm font-mono text-primary-light whitespace-pre-wrap">{tc.output}</pre>
-                    </div>
+  
+            {/* Expected I/O (legacy fallback) */}
+            {publicTests.length === 0 && (assignment.expected_input || assignment.expected_output) && (
+              <div className="grid grid-cols-2 gap-4">
+                {assignment.expected_input && (
+                  <div className="bg-white/[0.03] border border-white/5 rounded-xl p-4">
+                    <p className="text-[10px] font-bold text-gray-600 uppercase mb-2">Sample Input</p>
+                    <pre className="text-sm font-mono text-emerald-300 whitespace-pre-wrap">{assignment.expected_input}</pre>
                   </div>
-                ))}
-                {testCases.some(tc => tc.is_hidden) && (
-                  <p className="text-xs text-gray-600 flex items-center gap-1.5">
-                    <AlertCircle size={12} />
-                    {testCases.filter(tc => tc.is_hidden).length} hidden test case(s) will also be evaluated on submission.
-                  </p>
+                )}
+                {assignment.expected_output && (
+                  <div className="bg-white/[0.03] border border-white/5 rounded-xl p-4">
+                    <p className="text-[10px] font-bold text-gray-600 uppercase mb-2">Expected Output</p>
+                    <pre className="text-sm font-mono text-primary-light whitespace-pre-wrap">{assignment.expected_output}</pre>
+                  </div>
                 )}
               </div>
-            </div>
-          )}
-
-          {/* Expected I/O (legacy fallback) */}
-          {publicTests.length === 0 && (assignment.expected_input || assignment.expected_output) && (
-            <div className="grid grid-cols-2 gap-4">
-              {assignment.expected_input && (
-                <div className="bg-white/[0.03] border border-white/5 rounded-xl p-4">
-                  <p className="text-[10px] font-bold text-gray-600 uppercase mb-2">Sample Input</p>
-                  <pre className="text-sm font-mono text-emerald-300 whitespace-pre-wrap">{assignment.expected_input}</pre>
-                </div>
-              )}
-              {assignment.expected_output && (
-                <div className="bg-white/[0.03] border border-white/5 rounded-xl p-4">
-                  <p className="text-[10px] font-bold text-gray-600 uppercase mb-2">Expected Output</p>
-                  <pre className="text-sm font-mono text-primary-light whitespace-pre-wrap">{assignment.expected_output}</pre>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* CTA */}
-          <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row gap-3">
-            {isExpired ? (
-              <div className="flex-1 py-4 rounded-2xl font-black text-center text-red-400 bg-red-500/10 border border-red-500/20 flex items-center justify-center gap-2">
-                <AlertCircle size={20} /> Deadline Passed — Submission Closed
-              </div>
-            ) : (
-              <>
-                <Link to={`/student/workspace/${id}`}
-                  className="flex-1 btn-primary py-4 rounded-2xl font-black text-white text-center flex items-center justify-center gap-2 text-lg shadow-2xl shadow-primary/30">
-                  <Sparkles size={20} /> {assignment.is_solved ? 'Improve Solution' : assignment.user_status ? 'Resume Solving' : 'Start Solving Now'}
-                </Link>
-                {!assignment.is_solved && (
-                  <Link to={`/student/workspace/${id}`}
-                    className="flex-1 py-4 rounded-2xl font-black text-center flex items-center justify-center gap-2 text-lg border-2 border-primary/40 text-primary-light hover:bg-primary/10 transition-all">
-                    <Send size={20} /> Submit Assignment
-                  </Link>
-                )}
-              </>
             )}
+  
+            {/* CTA */}
+            <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row gap-3">
+              {isExpired ? (
+                <div className="flex-1 py-4 rounded-2xl font-black text-center text-red-400 bg-red-500/10 border border-red-500/20 flex items-center justify-center gap-2">
+                  <AlertCircle size={20} /> Deadline Passed — Submission Closed
+                </div>
+              ) : (
+                <>
+                  <Link to={`/student/workspace/${id}`}
+                    className="flex-1 btn-primary py-4 rounded-2xl font-black text-white text-center flex items-center justify-center gap-2 text-lg shadow-2xl shadow-primary/30">
+                    <Sparkles size={20} /> {assignment.is_solved ? 'Improve Solution' : assignment.user_status ? 'Resume Solving' : 'Start Solving Now'}
+                  </Link>
+                  {!assignment.is_solved && (
+                    <Link to={`/student/workspace/${id}`}
+                      className="flex-1 py-4 rounded-2xl font-black text-center flex items-center justify-center gap-2 text-lg border-2 border-primary/40 text-primary-light hover:bg-primary/10 transition-all">
+                      <Send size={20} /> Submit Assignment
+                    </Link>
+                  )}
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   }

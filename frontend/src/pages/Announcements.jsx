@@ -65,7 +65,8 @@ export default function Announcements() {
     }
   };
 
-  if (loading && announcements.length === 0) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div></div>;
+  // Soft loading check
+  const isDataReady = !loading || announcements.length > 0;
 
   return (
     <div className={`max-w-4xl mx-auto space-y-8 animate-fade-in-up ${loading ? 'opacity-60 transition-opacity' : ''}`}>
@@ -112,37 +113,43 @@ export default function Announcements() {
       )}
 
       <div className="space-y-4">
-        {announcements.map(ann => (
-          <div key={ann.id} className="glass-card rounded-2xl p-4 sm:p-6 relative group animate-fade-in">
-            {profile?.role === 'Educator' && (
-              <button 
-                onClick={() => handleDelete(ann.id)}
-                className="absolute top-6 right-6 p-2 text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
-              >
-                <Trash2 size={16} />
-              </button>
-            )}
-            <div className="flex items-start gap-4">
-              <div className="bg-primary/10 p-3 rounded-xl shrink-0">
-                <Megaphone size={24} className="text-primary-light" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white">{ann.title}</h3>
-                <p className="text-gray-400 leading-relaxed">{ann.body}</p>
-                <div className="flex items-center gap-4 pt-2">
-                   <span className="text-[11px] font-bold text-gray-500 flex items-center gap-1.5 uppercase tracking-wider">
-                     <Calendar size={12} /> {new Date(ann.created_at).toLocaleDateString()}
-                   </span>
-                   <span className="text-[11px] font-bold text-gray-500 flex items-center gap-1.5 uppercase tracking-wider">
-                     <User size={12} /> {ann.users?.name || 'GyanCode Staff'}
-                   </span>
+        {!isDataReady ? (
+          [...Array(3)].map((_, i) => (
+            <div key={i} className="glass-card rounded-2xl p-6 h-32 animate-pulse bg-white/5"></div>
+          ))
+        ) : (
+          announcements.map(ann => (
+            <div key={ann.id} className="glass-card rounded-2xl p-4 sm:p-6 relative group animate-fade-in">
+              {profile?.role === 'Educator' && (
+                <button 
+                  onClick={() => handleDelete(ann.id)}
+                  className="absolute top-6 right-6 p-2 text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+              <div className="flex items-start gap-4">
+                <div className="bg-primary/10 p-3 rounded-xl shrink-0">
+                  <Megaphone size={24} className="text-primary-light" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-white">{ann.title}</h3>
+                  <p className="text-gray-400 leading-relaxed">{ann.body}</p>
+                  <div className="flex items-center gap-4 pt-2">
+                     <span className="text-[11px] font-bold text-gray-500 flex items-center gap-1.5 uppercase tracking-wider">
+                       <Calendar size={12} /> {new Date(ann.created_at).toLocaleDateString()}
+                     </span>
+                     <span className="text-[11px] font-bold text-gray-500 flex items-center gap-1.5 uppercase tracking-wider">
+                       <User size={12} /> {ann.users?.name || 'GyanCode Staff'}
+                     </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
 
-        {announcements.length === 0 && (
+        {isDataReady && announcements.length === 0 && (
           <div className="py-20 text-center glass-card rounded-3xl opacity-50">
             <Megaphone size={48} className="mx-auto text-gray-600 mb-4" />
             <p className="text-gray-500">No announcements yet. Keep an eye out!</p>
