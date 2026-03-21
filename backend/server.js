@@ -1142,7 +1142,7 @@ app.delete('/admin/certificates/:id', authenticate, requireAdmin, async (req, re
     res.json({ message: 'Deleted certificate' });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
 });
 

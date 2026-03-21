@@ -7,8 +7,6 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
-      - key: PORT
-        value: 5000
       - key: SUPABASE_URL
         fromConfig: true
       - key: SUPABASE_ANON_KEY
