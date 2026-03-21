@@ -542,12 +542,12 @@ function CertificateModal({ cert, profile, onClose }) {
 }
 
 // ──── Main Certificates Page ───────────────────────────────────────────────────
-export default function Certificates() {
+export default function Certificates({ settings = {}, profile: appProfile }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [certificates, setCertificates] = useState([]);
   const [students, setStudents]         = useState([]);
-  const [profile, setProfile]           = useState(null);
+  const [profile, setProfile]           = useState(appProfile || null);
   const [loading, setLoading]           = useState(true);
   const [showForm, setShowForm]         = useState(false);
   const [revoking, setRevoking]         = useState(null);
@@ -607,8 +607,7 @@ export default function Certificates() {
 
         // Check for deep link
         const queryParams = new URLSearchParams(location.search);
-        const initialAwardedTo = queryParams.get('awarded_to');
-        if (initialAwardedTo && ['Educator', 'Admin'].includes(profileData.role) && isMounted) {
+        if (initialAwardedTo && ['Educator', 'Admin'].includes(profileData.role) && (settings.educator_verify_certificates_enabled !== false || profileData.role === 'Admin') && isMounted) {
           setShowForm(true);
         }
       } catch (err) {
@@ -683,7 +682,7 @@ export default function Certificates() {
             {isEducator ? 'Issue and manage achievement certificates for students' : 'Your earned achievement certificates'}
           </p>
         </div>
-        {isEducator && !showForm && (
+        {isEducator && !showForm && (settings.educator_verify_certificates_enabled !== false || profile?.role === 'Admin') && (
           <div className="flex gap-2 sm:gap-3">
             <button onClick={() => navigate('/educator/customize-certificate')}
               className="bg-white/5 hover:bg-white/10 text-white px-3 sm:px-5 py-3 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors">

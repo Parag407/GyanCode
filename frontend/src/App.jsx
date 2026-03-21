@@ -31,6 +31,7 @@ import AdminPanel from './pages/AdminPanel';
 function App() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ function App() {
         }
         console.log('[App] Session acquired:', session ? 'User ID: ' + session.user.id : 'No session');
         setSession(session);
+        fetchSettings();
         if (session) fetchProfile(session.user.id);
         else setLoading(false);
       })
@@ -102,13 +104,28 @@ function App() {
     console.log('[App] Auth initialization complete.');
   };
 
+  const fetchSettings = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(import.meta.env.VITE_API_URL + '/admin/settings', {
+        headers: { Authorization: `Bearer ${session?.access_token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSettings(data);
+      }
+    } catch (e) {
+      console.warn('[App] Settings fetch error:', e);
+    }
+  };
+
   return (
     <Router>
       <div className="min-h-screen bg-dark text-white font-sans relative">
         <div className="gradient-blob opacity-50"></div>
         <div className="gradient-blob-2 opacity-50"></div>
 
-        <Navbar session={session} profile={profile} />
+        <Navbar session={session} profile={profile} settings={settings} />
         <main className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 relative z-10">
           {loading ? (
             <div className="min-h-screen bg-dark flex items-center justify-center">
@@ -121,14 +138,14 @@ function App() {
               <Route path="/register" element={!session ? <Register /> : <Navigate to="/" />} />
 
               {/* Public */}
-              <Route path="/leaderboard" element={<Leaderboard profile={profile} />} />
+              <Route path="/leaderboard" element={(settings.student_leaderboard_visible !== false || profile?.role === 'Admin') ? <Leaderboard profile={profile} /> : <Navigate to="/" />} />
               <Route path="/playground" element={<Playground />} />
               <Route path="/docs" element={<Documentation />} />
 
               {/* Authenticated */}
               <Route path="/profile" element={session ? <Profile /> : <Navigate to="/login" />} />
-              <Route path="/certificates" element={session ? <Certificates /> : <Navigate to="/login" />} />
-              <Route path="/ai-tutor" element={session ? <AiTutor /> : <Navigate to="/login" />} />
+              <Route path="/certificates" element={session ? <Certificates settings={settings} profile={profile} /> : <Navigate to="/login" />} />
+              <Route path="/ai-tutor" element={(session && (settings.student_ai_tutor_enabled !== false || profile?.role === 'Admin')) ? <AiTutor /> : <Navigate to="/" />} />
               <Route path="/announcements" element={session ? <Announcements /> : <Navigate to="/login" />} />
 
               {/* Admin */}
@@ -139,8 +156,8 @@ function App() {
               <Route path="/educator/student/:id" element={['Educator', 'Admin'].includes(profile?.role) ? <StudentProfile /> : <Navigate to="/" />} />
               
               {/* Educator & Admin Shared Overrides */}
-              <Route path="/educator/dashboard" element={['Educator', 'Admin'].includes(profile?.role) ? <EducatorDashboard /> : <Navigate to="/" />} />
-              <Route path="/educator/create-assignment" element={['Educator', 'Admin'].includes(profile?.role) ? <CreateAssignment /> : <Navigate to="/" />} />
+              <Route path="/educator/dashboard" element={['Educator', 'Admin'].includes(profile?.role) ? <EducatorDashboard settings={settings} profile={profile} /> : <Navigate to="/" />} />
+              <Route path="/educator/create-assignment" element={(['Educator', 'Admin'].includes(profile?.role) && (settings.educator_create_assignments_enabled !== false || profile?.role === 'Admin')) ? <CreateAssignment /> : <Navigate to="/educator/dashboard" />} />
               <Route path="/educator/edit-assignment/:id" element={['Educator', 'Admin'].includes(profile?.role) ? <EditAssignment /> : <Navigate to="/" />} />
               <Route path="/educator/my-assignments" element={['Educator', 'Admin'].includes(profile?.role) ? <MyAssignments /> : <Navigate to="/" />} />
               <Route path="/educator/all-submissions" element={['Educator', 'Admin'].includes(profile?.role) ? <AllSubmissions /> : <Navigate to="/" />} />

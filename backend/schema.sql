@@ -21,6 +21,7 @@ DROP TABLE IF EXISTS public.announcements CASCADE;
 DROP TABLE IF EXISTS public.certificates CASCADE;
 DROP TABLE IF EXISTS public.submissions CASCADE;
 DROP TABLE IF EXISTS public.assignments CASCADE;
+DROP TABLE IF EXISTS public.platform_settings CASCADE;
 DROP TABLE IF EXISTS public.users CASCADE;
 
 -- ========== STEP 2: CREATE TABLES ==========
@@ -76,9 +77,17 @@ CREATE TABLE public.certificates (
     category TEXT,
     description TEXT,
     skills TEXT,
-    issued_by UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+    issued_by UUID REFERENCES public.users(id) ON DELETE SET NULL, -- Nullable for system-issued
     storage_url TEXT DEFAULT '',
     issued_on DATE DEFAULT CURRENT_DATE NOT NULL
+);
+
+-- Platform Settings table
+CREATE TABLE public.platform_settings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    key TEXT UNIQUE NOT NULL,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
 -- Announcements table
@@ -162,6 +171,7 @@ ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bookmarks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.test_cases ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submission_comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.platform_settings ENABLE ROW LEVEL SECURITY;
 
 -- ========== STEP 5: RLS POLICIES ==========
 
@@ -175,6 +185,12 @@ CREATE POLICY "Admins can manage all announcements" ON public.announcements FOR 
 CREATE POLICY "Admins can manage all bookmarks" ON public.bookmarks FOR ALL USING (public.is_admin());
 CREATE POLICY "Admins can manage all test cases" ON public.test_cases FOR ALL USING (public.is_admin());
 CREATE POLICY "Admins can manage all comments" ON public.submission_comments FOR ALL USING (public.is_admin());
+CREATE POLICY "Admins can manage all settings" ON public.platform_settings FOR ALL USING (public.is_admin());
+
+-- ---- PLATFORM SETTINGS ----
+-- Publicly readable by all authenticated users for frontend enforcement
+CREATE POLICY "Anyone can view settings" ON public.platform_settings
+    FOR SELECT USING (auth.role() = 'authenticated');
 
 -- ---- USERS ----
 -- Users can read their own profile

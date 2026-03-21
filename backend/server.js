@@ -415,6 +415,52 @@ app.post('/submit', authenticate, async (req, res) => {
         language: assignment.language, last_hint: hint
     }]).select().single();
 
+    // --- Automatic Certificate Reward System ---
+    try {
+        if (status === 'Success' && !alreadySolved) {
+            const { data: stData } = await supabaseAdmin.from('platform_settings').select('*');
+            const settings = {};
+            (stData || []).forEach(s => { settings[s.key] = s.value; });
+
+            if (settings.auto_cert_enabled) {
+                const thresholdCount = parseInt(settings.auto_cert_threshold_count) || 5;
+                
+                // Check unique solved assignments count
+                const { data: allUserSubs } = await supabaseAdmin
+                    .from('submissions')
+                    .select('assignment_id')
+                    .eq('user_id', req.user.id)
+                    .eq('status', 'Success');
+                
+                const uniqueSolved = new Set((allUserSubs || []).map(s => s.assignment_id)).size;
+
+                if (uniqueSolved >= thresholdCount) {
+                    const { data: existingCert } = await supabaseAdmin
+                        .from('certificates')
+                        .select('id')
+                        .eq('awarded_to', req.user.id)
+                        .eq('category', 'Milestone')
+                        .limit(1);
+
+                    if (!existingCert || existingCert.length === 0) {
+                        await supabaseAdmin.from('certificates').insert([{
+                            awarded_to: req.user.id,
+                            issued_by: null, // Issued by System
+                            title: `Achievement Milestone: ${thresholdCount} Solved`,
+                            description: `Automatically awarded by GyanCode for successfully completing ${thresholdCount} unique coding assignments.`,
+                            skills: 'Problem Solving, Persistence',
+                            category: 'Milestone',
+                            issued_on: new Date().toISOString()
+                        }]);
+                        console.log(`[Auto-Cert] Awarded milestone certificate to ${req.user.id}`);
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        console.error('[Auto-Cert] Logic error:', err);
+    }
+
     res.json({
         status, 
         results, // Detailed results for all cases (masked for hidden)
@@ -1146,6 +1192,48 @@ app.delete('/admin/certificates/:id', authenticate, requireAdmin, async (req, re
     const { error } = await supabaseAdmin.from('certificates').delete().eq('id', req.params.id);
     if (error) return res.status(400).json({ error: error.message });
     res.json({ message: 'Deleted certificate' });
+});
+
+// GET /admin/settings — fetch all platform-wide settings (Role-aware: educators/students can read)
+app.get('/admin/settings', authenticate, async (req, res) => {
+    const { data, error } = await supabaseAdmin.from('platform_settings').select('*');
+    if (error) return res.status(400).json({ error: error.message });
+    
+    // Map array to object for easier consumption
+    const settings = {};
+    (data || []).forEach(s => { settings[s.key] = s.value; });
+    
+    // Provide defaults if table is empty or missing keys
+    const defaults = {
+        educator_create_assignments_enabled: true,
+        educator_verify_certificates_enabled: true,
+        educator_post_announcements_enabled: true,
+        student_ai_tutor_enabled: true,
+        student_leaderboard_visible: true,
+        auto_cert_enabled: false,
+        auto_cert_threshold_count: 5,
+        auto_cert_threshold_streak: 7
+    };
+    
+    res.json({ ...defaults, ...settings });
+});
+
+// PATCH /admin/settings — update platform-wide settings
+app.patch('/admin/settings', authenticate, requireAdmin, async (req, res) => {
+    const updates = req.body; // e.g., { educator_create_assignments_enabled: false }
+    const promises = Object.entries(updates).map(([key, value]) => {
+        return supabaseAdmin.from('platform_settings').upsert({ 
+            key, 
+            value, 
+            updated_at: new Date().toISOString() 
+        });
+    });
+
+    const results = await Promise.all(promises);
+    const firstError = results.find(r => r.error);
+    if (firstError) return res.status(400).json({ error: firstError.error.message });
+    
+    res.json({ success: true });
 });
 
 app.listen(PORT, '0.0.0.0', () => {

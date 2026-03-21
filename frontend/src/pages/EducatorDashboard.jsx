@@ -7,7 +7,7 @@ import { LogOut, Code2, LayoutDashboard, FilePlus, Trophy, History, Award, User,
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
-export default function EducatorDashboard() {
+export default function EducatorDashboard({ settings = {}, profile }) {
   const [stats, setStats] = useState(null);
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -152,9 +152,11 @@ export default function EducatorDashboard() {
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Educator Dashboard</h1>
           <p className="text-gray-500 text-sm mt-1">Monitor class performance at a glance</p>
         </div>
-        <Link to="/educator/create-assignment" className="btn-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2">
-          <FilePlus size={16} /> New Assignment
-        </Link>
+        {(settings.educator_create_assignments_enabled !== false || profile?.role === 'Admin') && (
+          <Link to="/educator/create-assignment" className="btn-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2">
+            <FilePlus size={16} /> New Assignment
+          </Link>
+        )}
       </div>
 
       {/* Stats */}
@@ -258,18 +260,20 @@ export default function EducatorDashboard() {
           <h3 className="text-lg font-bold">Announcements</h3>
         </div>
         <div className="p-4 sm:p-6 space-y-4">
-          <div className="flex gap-3">
-            <div className="flex-1 space-y-2">
-              <input value={announcementForm.title} onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })}
-                placeholder="Announcement title..." className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white text-sm placeholder-gray-600 focus:bg-white/[0.07] transition-all" />
-              <input value={announcementForm.body} onChange={(e) => setAnnouncementForm({ ...announcementForm, body: e.target.value })}
-                placeholder="Optional details..." className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white text-sm placeholder-gray-600 focus:bg-white/[0.07] transition-all" />
+          {(settings.educator_post_announcements_enabled !== false || profile?.role === 'Admin') && (
+            <div className="flex gap-3">
+              <div className="flex-1 space-y-2">
+                <input value={announcementForm.title} onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })}
+                  placeholder="Announcement title..." className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white text-sm placeholder-gray-600 focus:bg-white/[0.07] transition-all" />
+                <input value={announcementForm.body} onChange={(e) => setAnnouncementForm({ ...announcementForm, body: e.target.value })}
+                  placeholder="Optional details..." className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white text-sm placeholder-gray-600 focus:bg-white/[0.07] transition-all" />
+              </div>
+              <button onClick={handlePostAnnouncement} disabled={posting || !announcementForm.title.trim()}
+                className="btn-primary px-5 rounded-xl text-white text-sm font-bold flex items-center gap-2 disabled:opacity-50 self-start mt-0">
+                <Send size={14} /> Post
+              </button>
             </div>
-            <button onClick={handlePostAnnouncement} disabled={posting || !announcementForm.title.trim()}
-              className="btn-primary px-5 rounded-xl text-white text-sm font-bold flex items-center gap-2 disabled:opacity-50 self-start mt-0">
-              <Send size={14} /> Post
-            </button>
-          </div>
+          )}
           {announcements.length > 0 ? (
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {announcements.map(a => (

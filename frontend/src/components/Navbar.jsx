@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { LogOut, Code2, LayoutDashboard, FilePlus, Trophy, History, Award, User, ChevronDown, Bot, PlayCircle, TrendingUp, Megaphone, Swords, Shield, BookOpen, Menu, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
-export default function Navbar({ session, profile }) {
+export default function Navbar({ session, profile, settings = {} }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false); // User dropdown
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // Mobile navbar toggle
@@ -45,9 +45,11 @@ export default function Navbar({ session, profile }) {
         <Link to="/playground" onClick={() => setMobileMenuOpen(false)} className={baseClass}>
           <PlayCircle size={16} /> Playground
         </Link>
-        <Link to="/leaderboard" onClick={() => setMobileMenuOpen(false)} className={baseClass}>
-          <Trophy size={16} /> Leaderboard
-        </Link>
+        {(settings.student_leaderboard_visible !== false || profile?.role === 'Admin') && (
+          <Link to="/leaderboard" onClick={() => setMobileMenuOpen(false)} className={baseClass}>
+            <Trophy size={16} /> Leaderboard
+          </Link>
+        )}
         <Link to="/docs" onClick={() => setMobileMenuOpen(false)} className={primaryClass}>
           <BookOpen size={16} /> Docs
         </Link>
@@ -159,10 +161,12 @@ export default function Navbar({ session, profile }) {
                     className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
                     <Megaphone size={16} /> Announcements
                   </Link>
-                  <Link to="/ai-tutor" onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
-                    <Bot size={16} /> AI Tutor
-                  </Link>
+                  {(settings.student_ai_tutor_enabled !== false || profile?.role === 'Admin') && (
+                    <Link to="/ai-tutor" onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                      <Bot size={16} /> AI Tutor
+                    </Link>
+                  )}
                   <div className="border-t border-white/5 my-1"></div>
                   <button onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-5 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors">

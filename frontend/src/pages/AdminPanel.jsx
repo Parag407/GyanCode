@@ -7,7 +7,8 @@ import {
   LayoutDashboard, Users, BookOpen, FileCheck, Megaphone,
   Shield, Search, Trash2, ChevronDown, ChevronUp, TrendingUp,
   CheckCircle2, XCircle, Loader2, Send, AlertTriangle, Eye,
-  Rocket, Save, RefreshCw, Edit2, Key, Award
+  Rocket, Save, RefreshCw, Edit2, Key, Award, Settings,
+  Lock, Zap, ToggleLeft, ToggleRight
 } from 'lucide-react';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
@@ -19,6 +20,7 @@ const TABS = [
   { id: 'submissions',  label: 'Submissions',    icon: FileCheck       },
   { id: 'certificates', label: 'Certificates',   icon: Award           },
   { id: 'announcements',label: 'Announcements',  icon: Megaphone       },
+  { id: 'settings',     label: 'Settings',       icon: Settings        },
 ];
 
 const ROLE_COLORS = {
@@ -47,6 +49,7 @@ function useAdminData(tab) {
           submissions:   '/admin/submissions',
           certificates:  '/admin/certificates',
           announcements: '/announcements',
+          settings:      '/admin/settings',
         };
         const res = await fetch(`${import.meta.env.VITE_API_URL}${urls[tab]}`, { headers: h });
         if (res.ok) {
@@ -575,7 +578,74 @@ function CertificatesTab({ data, reload }) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Auto-Reward System Controls */}
+      <div className="glass-card rounded-2xl overflow-hidden border-orange-500/20">
+        <div className="p-4 bg-gradient-to-r from-orange-500/10 to-transparent flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-orange-500/20 p-2 rounded-xl">
+              <Zap size={20} className="text-orange-400" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg">System Automation</h3>
+              <p className="text-xs text-gray-500">Automatic certificate rewards for students</p>
+            </div>
+          </div>
+          <button 
+            disabled={!data}
+            onClick={async () => {
+              const newVal = !data?.auto_cert_enabled;
+              const { data: { session } } = await supabase.auth.getSession();
+              await fetch(`${import.meta.env.VITE_API_URL}/admin/settings`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+                body: JSON.stringify({ auto_cert_enabled: newVal })
+              });
+              reload();
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+              data?.auto_cert_enabled ? 'bg-orange-500 text-white' : 'bg-white/5 text-gray-400'
+            }`}
+          >
+            {data?.auto_cert_enabled ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+            {data?.auto_cert_enabled ? 'System Active' : 'System Paused'}
+          </button>
+        </div>
+        
+        {data?.auto_cert_enabled && (
+          <div className="p-4 bg-white/5 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-white/10">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Achievement Threshold</label>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="number" 
+                  value={data?.auto_cert_threshold_count || 5}
+                  onChange={async (e) => {
+                    const val = parseInt(e.target.value);
+                    const { data: { session } } = await supabase.auth.getSession();
+                    await fetch(`${import.meta.env.VITE_API_URL}/admin/settings`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+                      body: JSON.stringify({ auto_cert_threshold_count: val })
+                    });
+                  }}
+                  className="bg-black/20 border border-white/10 rounded-lg px-3 py-1.5 text-sm w-20 focus:outline-none focus:border-orange-500/50"
+                />
+                <span className="text-sm text-gray-400">Solved Assignments</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Status Information</label>
+              <div className="flex items-center gap-2 text-sm text-orange-400/80">
+                <Shield size={14} />
+                <span>Certificates issued by <strong>System</strong> (Milestone category)</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-4">
       <div className="flex gap-3">
         <div className="flex-1 relative">
           <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" />
@@ -635,6 +705,95 @@ function CertificatesTab({ data, reload }) {
           </table>
         </div>
       </div>
+    </div>
+  </div>
+);
+}
+
+function SettingsTab({ data, reload }) {
+  const [saving, setSaving] = useState(false);
+  const [settings, setSettings] = useState(data || {});
+
+  useEffect(() => {
+    if (data) setSettings(data);
+  }, [data]);
+
+  const toggle = async (key) => {
+    const newVal = !settings[key];
+    setSettings(prev => ({ ...prev, [key]: newVal }));
+    
+    try {
+      setSaving(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/settings`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({ [key]: newVal })
+      });
+      if (!res.ok) throw new Error('Failed to update');
+    } catch (err) {
+      console.error(err);
+      alert('Error updating setting');
+      setSettings(prev => ({ ...prev, [key]: !newVal })); // Rollback
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const sections = [
+    {
+      title: 'Educator Permissions',
+      icon: Users,
+      items: [
+        { key: 'educator_create_assignments_enabled', label: 'Allow educators to create assignments', desc: 'If disabled, only admins can create new tasks.' },
+        { key: 'educator_verify_certificates_enabled', label: 'Allow educators to issue certificates', desc: 'Determines if educators can manually award certificates.' },
+        { key: 'educator_post_announcements_enabled',  label: 'Allow educators to post announcements', desc: 'Control visibility of the announcement creation tool.' },
+      ]
+    },
+    {
+      title: 'Student Features',
+      icon: BookOpen,
+      items: [
+        { key: 'student_ai_tutor_enabled', label: 'Enable AI Tutor (GyanBot) for students', desc: 'Allows students to ask AI for hints and code explanations.' },
+        { key: 'student_leaderboard_visible', label: 'Public Leaderboard visibility', desc: 'If disabled, students cannot see the global ranking.' },
+      ]
+    }
+  ];
+
+  return (
+    <div className="space-y-6">
+      {sections.map(section => (
+        <div key={section.title} className="glass-card rounded-2xl overflow-hidden">
+          <div className="p-4 bg-white/5 border-b border-white/10 flex items-center gap-2">
+            <section.icon size={18} className="text-orange-400" />
+            <h2 className="font-bold">{section.title}</h2>
+          </div>
+          <div className="p-4 space-y-4">
+            {section.items.map(item => (
+              <div key={item.key} className="flex items-center justify-between group">
+                <div>
+                  <p className="font-medium text-gray-200">{item.label}</p>
+                  <p className="text-xs text-gray-500">{item.desc}</p>
+                </div>
+                <button 
+                  onClick={() => toggle(item.key)}
+                  className={`w-12 h-6 rounded-full transition-all relative ${settings[item.key] ? 'bg-orange-500' : 'bg-white/10'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings[item.key] ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+      {saving && (
+        <div className="fixed bottom-6 right-6 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl flex items-center gap-2 text-xs border border-white/20 z-50 animate-fade-in">
+          <Loader2 size={12} className="animate-spin" /> Saving settings...
+        </div>
+      )}
     </div>
   );
 }
@@ -705,6 +864,7 @@ export default function AdminPanel() {
             {tab === 'submissions'   && <SubmissionsTab data={data} />}
             {tab === 'certificates'  && <CertificatesTab data={data} reload={reload} />}
             {tab === 'announcements' && <AnnouncementsTab data={data} reload={reload} />}
+            {tab === 'settings'      && <SettingsTab data={data} reload={reload} />}
           </>
         )}
       </div>
