@@ -5,7 +5,7 @@ import {
   Award, Calendar, User, Gift, AlertCircle, CheckCircle2,
   Search, ArrowLeft, Eye, Code2, Trash2, Download, X,
   Loader2, Sparkles, Tag, BookOpen, ChevronDown, Shield,
-  Star, Medal, GraduationCap
+  Star, Medal, GraduationCap, Trophy
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';

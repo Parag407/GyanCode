@@ -34,13 +34,26 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) fetchProfile(session.user.id);
-      else setLoading(false);
-    });
+    console.log('[App] Initializing auth state...');
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        if (error) {
+          console.error('[App] getSession error:', error);
+          setLoading(false);
+          return;
+        }
+        console.log('[App] Session acquired:', session ? 'User ID: ' + session.user.id : 'No session');
+        setSession(session);
+        if (session) fetchProfile(session.user.id);
+        else setLoading(false);
+      })
+      .catch(err => {
+        console.error('[App] getSession promise catch:', err);
+        setLoading(false);
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log('[App] onAuthStateChange event:', _event);
       setSession(session);
       if (session) fetchProfile(session.user.id);
       else {
@@ -56,30 +69,37 @@ function App() {
     // Only show the full-page loader if we don't have a profile yet (initial load)
     if (!profile) setLoading(true);
     try {
+      console.log('[App] Fetching profile for:', userId);
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Use backend /profile which uses service-role key (bypasses RLS recursion)
+        console.log('[App] Using backend profile API...');
         const res = await fetch(import.meta.env.VITE_API_URL + '/profile', {
           headers: { Authorization: `Bearer ${session.access_token}` }
         });
         if (res.ok) {
           const profileData = await res.json();
+          console.log('[App] Backend profile fetched successfully:', profileData.role);
           setProfile(profileData);
           setLoading(false);
           return;
         }
+        console.warn('[App] Backend profile API failed, trying fallback...');
       }
       
-      // Fallback: try direct Supabase query
       const { data, error } = await supabase
         .from('users').select('*').eq('id', userId).single();
+      if (error) {
+        console.error('[App] Supabase profile data error:', error);
+      }
       if (data) {
+        console.log('[App] Profile fallback fetched from Supabase');
         setProfile(data);
       }
     } catch (e) {
-      console.error('Profile fetch error:', e);
+      console.error('[App] Profile fetch error:', e);
     }
     setLoading(false);
+    console.log('[App] Auth initialization complete.');
   };
 
   return (
