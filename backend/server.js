@@ -20,6 +20,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 const { authenticate, authorize } = require('./middleware/auth');
+const requireAdmin = authorize(['Admin']);
 const { generateHint, simulateExecutionAI, verifySubmissionAI, runAITask } = require('./utils/ai');
 
 // CORS configuration - Allow Vercel frontend and local development
@@ -1220,20 +1221,28 @@ app.get('/admin/settings', authenticate, async (req, res) => {
 
 // PATCH /admin/settings — update platform-wide settings
 app.patch('/admin/settings', authenticate, requireAdmin, async (req, res) => {
-    const updates = req.body; // e.g., { educator_create_assignments_enabled: false }
-    const promises = Object.entries(updates).map(([key, value]) => {
-        return supabaseAdmin.from('platform_settings').upsert({ 
-            key, 
-            value, 
-            updated_at: new Date().toISOString() 
+    try {
+        const updates = req.body; 
+        const promises = Object.entries(updates).map(([key, value]) => {
+            return supabaseAdmin.from('platform_settings').upsert({ 
+                key, 
+                value, 
+                updated_at: new Date().toISOString() 
+            }, { onConflict: 'key' });
         });
-    });
 
-    const results = await Promise.all(promises);
-    const firstError = results.find(r => r.error);
-    if (firstError) return res.status(400).json({ error: firstError.error.message });
-    
-    res.json({ success: true });
+        const results = await Promise.all(promises);
+        const firstError = results.find(r => r.error);
+        if (firstError) {
+            console.error("Settings Update Error:", firstError.error);
+            return res.status(400).json({ error: firstError.error.message });
+        }
+        
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Settings Patch Exception:", err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
