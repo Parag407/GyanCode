@@ -3,7 +3,8 @@ import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend } from 'chart.js';
-import { LogOut, Code2, LayoutDashboard, FilePlus, Trophy, History, Award, User, ChevronDown, Bot, PlayCircle, TrendingUp, Megaphone, Swords, Shield, Search, Users, ExternalLink, FileCheck, Zap, ArrowRight, Send, Trash2, Tag, Loader2, Rocket, Save, CalendarClock, Eye, Pencil, Copy, Download } from 'lucide-react';
+import { LogOut, Code2, LayoutDashboard, FilePlus, Trophy, History, Award, User, ChevronDown, Bot, PlayCircle, TrendingUp, Megaphone, Swords, Shield, Search, Users, ExternalLink, FileCheck, Zap, ArrowRight, Send, Trash2, Tag, Loader2, Rocket, Save, CalendarClock, Eye, Pencil, Copy, Download, FileSpreadsheet } from 'lucide-react';
+import { generateExcelReport } from '../utils/reportGenerator';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
@@ -152,11 +153,20 @@ export default function EducatorDashboard({ settings = {}, profile }) {
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Educator Dashboard</h1>
           <p className="text-gray-500 text-sm mt-1">Monitor class performance at a glance</p>
         </div>
-        {(settings.educator_create_assignments_enabled !== false || profile?.role === 'Admin') && (
-          <Link to="/educator/create-assignment" className="btn-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2">
-            <FilePlus size={16} /> New Assignment
-          </Link>
-        )}
+        <div className="flex items-center gap-3">
+          <button 
+            disabled={!isDataReady}
+            onClick={() => generateExcelReport({ ...stats, assignments }, 'Educator_System_Report')}
+            className="bg-white/5 border border-white/10 text-gray-400 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-white/10 transition-all disabled:opacity-50">
+            <FileSpreadsheet size={16} /> Export to Excel
+          </button>
+
+          {(settings.educator_create_assignments_enabled !== false || profile?.role === 'Admin') && (
+            <Link to="/educator/create-assignment" className="btn-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2">
+              <FilePlus size={16} /> New Assignment
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Stats */}

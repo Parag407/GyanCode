@@ -79,6 +79,28 @@ app.post('/register', async (req, res) => {
     res.json({ message: 'Registration successful', userId: authData.user.id });
 });
 
+app.post('/complete-registration', authenticate, async (req, res) => {
+    const { name, role, academic_year, department } = req.body;
+    
+    // Check if profile already exists to avoid overwriting or duplicates
+    const { data: existingUser } = await supabaseAdmin.from('users').select('*').eq('id', req.user.id).single();
+    
+    const { error: profileError } = await supabaseAdmin.from('users').upsert([{
+        id: req.user.id, 
+        name: name || (existingUser ? existingUser.name : 'User'), 
+        email: req.user.email, 
+        role: role || (existingUser ? existingUser.role : 'Student'),
+        academic_year: academic_year || (existingUser ? existingUser.academic_year : null),
+        department: department || (existingUser ? existingUser.department : null),
+    }]);
+
+    if (profileError) {
+        return res.status(400).json({ error: profileError.message });
+    }
+
+    res.json({ message: 'Profile completed successfully', userId: req.user.id });
+});
+
 app.post('/change-password', authenticate, async (req, res) => {
     const { newPassword } = req.body;
     const { error } = await supabaseAdmin.auth.admin.updateUserById(req.user.id, {

@@ -26,6 +26,7 @@ import AllSubmissions from './pages/AllSubmissions';
 import Documentation from './pages/Documentation';
 import NotFound from './pages/NotFound';
 import Assignments from './pages/Assignments';
+import ResetPassword from './pages/ResetPassword';
 import AdminPanel from './pages/AdminPanel';
 
 function App() {
@@ -136,6 +137,7 @@ function App() {
               <Route path="/" element={<Home session={session} profile={profile} />} />
               <Route path="/login" element={!session ? <Login /> : <Navigate to="/" />} />
               <Route path="/register" element={!session ? <Register /> : <Navigate to="/" />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Public */}
               <Route path="/leaderboard" element={(settings.student_leaderboard_visible !== false || profile?.role === 'Admin') ? <Leaderboard profile={profile} /> : <Navigate to="/" />} />
