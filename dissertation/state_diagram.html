@@ -1,0 +1,154 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>GyanCode – State Transition Diagram</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #f2f2f2;
+  font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; padding: 40px 20px;
+}
+.card {
+  background: #fff;
+  padding: 30px 35px 22px;
+  border-radius: 10px;
+  box-shadow: 0 4px 28px rgba(0,0,0,.18);
+}
+.diagram {
+  position: relative;
+  width: 920px; height: 540px;
+}
+.state {
+  position: absolute;
+  border: 3.2px solid #000;
+  border-radius: 28px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  font-size: 13.5px; font-weight: bold;
+  line-height: 1.35; background: #fff;
+  font-family: Arial, sans-serif;
+}
+.state small { font-weight: normal; font-size: 11px; }
+svg { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+text.lbl { fill: #007700; font-size: 12px; font-family: Arial; font-weight: bold; }
+.title {
+  margin-top: 18px; font-size: 23px; font-weight: bold;
+  color: #007700; text-align: center; font-family: Arial;
+}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="diagram">
+
+  <!-- ── STATE BOXES ── -->
+  <!-- 1 Landing  cx=165 cy=52 -->
+  <div class="state" style="left:82px;top:26px;width:166px;height:52px">Landing Page</div>
+
+  <!-- 2 Authenticating  cx=165 cy=200 -->
+  <div class="state" style="left:82px;top:174px;width:166px;height:52px">
+    Authenticating<br><small>(Google OAuth)</small>
+  </div>
+
+  <!-- 3 Student Dashboard  cx=462 cy=200 -->
+  <div class="state" style="left:362px;top:174px;width:200px;height:52px">
+    Student<br>Dashboard
+  </div>
+
+  <!-- 4 Code Workspace  cx=165 cy=385 -->
+  <div class="state" style="left:82px;top:359px;width:166px;height:52px">
+    Code<br>Workspace
+  </div>
+
+  <!-- 5 Evaluating Submission  cx=462 cy=385 -->
+  <div class="state" style="left:362px;top:359px;width:200px;height:52px">
+    Evaluating<br>Submission
+  </div>
+
+  <!-- 6 Session End  cx=740 cy=200 -->
+  <div class="state" style="left:658px;top:174px;width:164px;height:52px">
+    Session End<br><small>(Logged Out)</small>
+  </div>
+
+  <svg viewBox="0 0 920 540" width="920" height="540">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" markerWidth="8" markerHeight="8"
+              refX="9" refY="5" orient="auto">
+        <polygon points="0,0 10,5 0,10" fill="#000"/>
+      </marker>
+    </defs>
+
+    <!-- ① Initial filled dot -->
+    <circle cx="30" cy="52" r="13" fill="#000"/>
+    <!-- dot → Landing left -->
+    <line x1="43" y1="52" x2="80" y2="52"
+          stroke="#000" stroke-width="2.5" marker-end="url(#ah)"/>
+
+    <!-- ② Landing bottom → Authenticating top (↓) -->
+    <line x1="165" y1="78" x2="165" y2="172"
+          stroke="#000" stroke-width="2.5" marker-end="url(#ah)"/>
+    <text x="172" y="116" class="lbl">Sign In with</text>
+    <text x="172" y="131" class="lbl">Google</text>
+
+    <!-- ③ Auth Failed: Landing right → long arc → Session End top -->
+    <path d="M 248,52 C 500,12 740,12 740,172"
+          stroke="#000" stroke-width="2.5" fill="none" marker-end="url(#ah)"/>
+    <text x="400" y="10" class="lbl">Auth Failed</text>
+
+    <!-- ④ Authenticating right → Student Dashboard left (Auth Success →) -->
+    <line x1="248" y1="200" x2="360" y2="200"
+          stroke="#000" stroke-width="2.5" marker-end="url(#ah)"/>
+    <text x="262" y="193" class="lbl">Auth Success</text>
+
+    <!-- ⑤ Student Dashboard left-bottom → Code Workspace top (Open Assignment) -->
+    <path d="M 362,222 C 270,260 165,300 165,357"
+          stroke="#000" stroke-width="2.5" fill="none" marker-end="url(#ah)"/>
+    <text x="192" y="278" class="lbl">Open</text>
+    <text x="182" y="293" class="lbl">Assignment</text>
+
+    <!-- ⑥ Student Dashboard right → Session End left (Logout) -->
+    <line x1="562" y1="200" x2="656" y2="200"
+          stroke="#000" stroke-width="2.5" marker-end="url(#ah)"/>
+    <text x="576" y="193" class="lbl">Logout</text>
+
+    <!-- ⑦ Session End right → End terminal -->
+    <line x1="822" y1="200" x2="856" y2="200"
+          stroke="#000" stroke-width="2.5" marker-end="url(#ah)"/>
+    <!-- End double-circle terminal -->
+    <circle cx="869" cy="200" r="12" fill="#fff" stroke="#000" stroke-width="3"/>
+    <circle cx="869" cy="200" r="5.5" fill="#000"/>
+
+    <!-- ⑧ Code Workspace right → Evaluating Submission left (Submit Code) -->
+    <line x1="248" y1="385" x2="360" y2="385"
+          stroke="#000" stroke-width="2.5" marker-end="url(#ah)"/>
+    <text x="263" y="378" class="lbl">Submit Code</text>
+
+    <!-- ⑨ Evaluating top → Student Dashboard bottom (Passed – Points Awarded ↑) -->
+    <line x1="482" y1="357" x2="482" y2="228"
+          stroke="#000" stroke-width="2.5" marker-end="url(#ah)"/>
+    <text x="490" y="306" class="lbl">Passed –</text>
+    <text x="487" y="321" class="lbl">Points Awarded</text>
+
+    <!-- ⑩ Evaluating bottom → loop (Failed – Hint Generated) back to Code Workspace -->
+    <path d="M 462,413 L 462,475 L 165,475 L 165,413"
+          stroke="#000" stroke-width="2.5" fill="none" marker-end="url(#ah)"/>
+    <text x="255" y="497" class="lbl">Failed – Hint Generated</text>
+
+    <!-- ⑪ Forgot Password note: Auth → arc back to self (OTP reset) -->
+    <path d="M 82,190 C 30,220 30,255 82,270"
+          stroke="#000" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+    <text x="2" y="215" class="lbl" font-size="10">Forgot</text>
+    <text x="2" y="228" class="lbl" font-size="10">Password</text>
+    <text x="2" y="241" class="lbl" font-size="10">(OTP Reset)</text>
+
+  </svg>
+</div>
+<div class="title">State Transition Diagram – GyanCode Platform</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+    @page {
+        size: A4;
+        margin: 1in;
+    }
+    body {
+        font-family: "Times New Roman", Times, serif;
+        font-size: 12pt;
+        line-height: 1.5;
+        text-align: justify;
+        margin: 0 auto;
+        max-width: 210mm; /* A4 Width */
+        background: #fff;
+        color: #000;
+        padding: 40px;
+    }
+    h1, h2, h3, h4 {
+        font-weight: bold;
+        text-align: left;
+    }
+    h1 {
+        text-align: center;
+        text-transform: uppercase;
+        font-size: 16pt;
+        margin-bottom: 30pt;
+    }
+    h2 {
+        font-size: 14pt;
+        margin-top: 24pt;
+        margin-bottom: 12pt;
+    }
+    h3 {
+        font-size: 12pt;
+        margin-top: 18pt;
+        margin-bottom: 8pt;
+        text-decoration: underline;
+    }
+    p {
+        text-indent: 0.5in;
+        margin-bottom: 12pt;
+    }
+    ul, ol {
+        margin-left: 0.5in;
+        margin-bottom: 12pt;
+    }
+    li {
+        margin-bottom: 6pt;
+    }
+</style>
+<title>Chapter 3: Requirement and Analysis</title>
+</head>
+<body>
+
+    <h1>Chapter 3: Requirement and Analysis</h1>
+
+    <h2>3.1 Problem Definition</h2>
+    <p>
+        Currently, computer science students frequently struggle to bridge the gap between theoretical classroom learning and practical coding execution. Traditional academic environments often lack real-time, adaptive mentorship systems. When novice programmers encounter syntax errors or logical missteps, they are typically met with raw, unforgiving compiler errors that induce frustration and impede the learning process. Conversely, simple static auto-grading platforms only provide a binary pass/fail result, failing to analyze the student's underlying logic or pedagogical intent. There is a critical missing link for a robust, curriculum-aligned educational platform that can not only securely host and execute student code, but also provide immediate, AI-driven contextual hints that guide the student toward the solution without directly revealing the correct answers.
+    </p>
+
+    <h2>3.2 Requirement Specification</h2>
+    
+    <h3>3.2.1 Functional Requirements</h3>
+    <ul>
+        <li><b>Authentication:</b> Secure user registration and login flows differentiating Student and Educator roles using Google OAuth.</li>
+        <li><b>Assignment Operations:</b> Educators must be able to create, edit, and assign programming tasks dynamically, while students fetch and attempt these assignments in a browser-based IDE.</li>
+        <li><b>AI Tutoring & Execution:</b> The system must execute code against test cases securely and, upon failure, seamlessly prompt the generative AI (GyanBot) to evaluate the code and return conversational hints.</li>
+        <li><b>Reporting & Certification:</b> Automated dashboards must track student progress, dynamically generating PDF certificates upon successful milestone completions, alongside Excel-based activity reports.</li>
+    </ul>
+
+    <h3>3.2.2 Non-functional Requirements</h3>
+    <ul>
+        <li><b>Scalability:</b> The backend must leverage Node.js to comfortably handle concurrent inbound code execution requests from a full classroom of students simultaneously.</li>
+        <li><b>Security:</b> Strict Row Level Security (RLS) policies must be enforced at the database level to fiercely protect user privacy and prevent grade tampering.</li>
+        <li><b>Reliability:</b> Incorporating a robust fallback mechanism (DeepSeek R1) ensures absolute 100% platform uptime even if the primary AI API (Google Gemini) experiences throttling limitations.</li>
+        <li><b>Performance:</b> Client-side logic in React (Vite) must maintain high responsiveness, guaranteeing UI rendering and code compiling workflows operate without visible latency.</li>
+    </ul>
+
+    <h2>3.3 Planning and Scheduling</h2>
+    <h3>3.3.1 Gantt Chart</h3>
+    <p>
+        The project timeline was meticulously structured following an Agile software development lifecycle methodology, divided evenly into multi-week sprints to isolate architectural milestones. The initial phase focused explicitly on Requirements Gathering and UI/UX wireframing for the interactive code editor. Next, intense backend sprint cycles covered database schema design in Supabase followed by RESTful API endpoints in Node.js. Mid-development sprints aggressively tackled the core innovation: integrating the complex prompt engineering required for reliable generative AI evaluation. The final phase was strictly reserved for comprehensive unit testing, deployment staging (via Render and Vercel), and extensive Beta testing within local user groups. A visual Gantt chart tracked strict adherence to these delivery milestones across the academic semester.
+    </p>
+
+    <h2>3.4 Software and Hardware Requirements</h2>
+    
+    <h3>3.4.1 Software Requirements</h3>
+    <ul>
+        <li><b>Frontend Framework:</b> React.js bundled via Vite for optimized speed.</li>
+        <li><b>Backend Environment:</b> Node.js utilizing the Express.js framework.</li>
+        <li><b>Database Service:</b> Supabase (PostgreSQL implementation).</li>
+        <li><b>External APIs:</b> Google Gemini API (Primary Model), DeepSeek R1 API (Fallback reasoning model).</li>
+        <li><b>Client Browser:</b> Modern HTML5 compliant browser (Google Chrome, Mozilla Firefox).</li>
+    </ul>
+
+    <h3>3.4.2 Hardware Requirements</h3>
+    <ul>
+        <li><b>Developer Workstation:</b> Multicore processor (Intel i5/AMD Ryzen 5 or higher) with a minimum 8GB RAM for stable full-stack local server hosting.</li>
+        <li><b>Client Machine:</b> As computation is offloaded to the cloud infrastructure via web APIs, any basic modern computer or tablet with a 2Mbps stable internet connection can seamlessly access the application.</li>
+    </ul>
+
+    <h2>3.5 Feasibility Study</h2>
+    
+    <h3>3.5.1 Technical Feasibility</h3>
+    <p>
+        The project architecture rests entirely on highly mature, exceptionally well-documented technology stacks. Incorporating the MERN-inspired stack alongside advanced, well-supported conversational LLM APIs guarantees there are no unpredictable technological blockages. Securely executing unverified user code on shared servers poses standard risks, however utilizing isolated compiler routing elegantly resolves this technical challenge.
+    </p>
+
+    <h3>3.5.2 Economic Feasibility</h3>
+    <ul>
+        <li><b>Hosting and Service Costs (Supabase):</b> Supabase offers a highly generous Free tier that is more than sufficient for the development, testing, and initial deployment phases of this project. This plan natively includes robust PostgreSQL database usage, built-in identity authentication services (Google OAuth), and strict data storage at no cost, up to substantial operational limits.</li>
+        <li><b>Application Deployment Costs:</b> The React interface runs effortlessly on Vercel's zero-cost hobby tier, while the Node.js API backend is hosted entirely within Render's free web service allocation.</li>
+        <li><b>Artificial Intelligence Costs:</b> Advanced natural language evaluation fundamentally relies on the free-tier API allocations provided by Google Gemini and OpenRouter (for DeepSeek R1), entirely negating any direct financial overhead during the academic rollout phase.</li>
+    </ul>
+
+    <h3>3.5.3 Operational Feasibility</h3>
+    <p>
+        The platform features an exceptionally shallow learning curve, drastically increasing its operational adoption feasibility among educators and novice programmers. Because it operates cleanly within a web browser—completely eliminating tedious local compiler toolchain configurations—it can be integrated into existing classroom environments instantly with profound ease.
+    </p>
+
+    <h2>3.6 Fact Finding Technique</h2>
+    
+    <h3>3.6.1 Observation</h3>
+    <p>
+        Initial fact-finding fundamentally began with directly observing computing laboratory sessions. It was routinely noted that novice programmers spent exorbitant amounts of time blocked by trivial syntax errors, severely reducing actual algorithm drafting time.
+    </p>
+
+    <h3>3.6.2 Record Review</h3>
+    <p>
+        Analyzing available historical academic course syllabi and typical exam grade distributions revealed a widespread necessity for structured, progressive coding homework assignments that directly tracked against specific collegiate learning objectives.
+    </p>
+
+    <h3>3.6.3 Questionnaires</h3>
+    <p>
+        Surveys were widely distributed among peer computer science students. Data overwhelmingly confirmed severe dissatisfaction with existing online judges; users indicated a strong, unfulfilled desire for localized platforms that offered gentle "hints" rather than blunt failure notices.
+    </p>
+
+    <h3>3.6.4 Interview</h3>
+    <p>
+        Brief informational interviews heavily engaging local computer science faculty members revealed profound fatigue associated with manual code grading. Educators specifically requested an intuitive, unified dashboard capable of tracking granular student success metrics seamlessly.
+    </p>
+
+</body>
+</html>

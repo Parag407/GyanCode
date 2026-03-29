@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chapter 5 – Implementation and Testing | GyanCode</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      color: #000;
+      background: #fff;
+    }
+
+    /* ── A4 page simulation ── */
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 20mm auto;
+      padding: 25mm 25mm 25mm 30mm;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,.15);
+      page-break-after: always;
+    }
+
+    /* ── Typography ── */
+    h1, h2, h3 {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 14pt;
+      font-weight: bold;
+      text-align: left;
+      color: #000;
+      margin-bottom: 10pt;
+      margin-top: 16pt;
+    }
+
+    h1 { font-size: 16pt; text-align: center; margin-bottom: 20pt; margin-top: 0; }
+
+    p {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 12pt;
+      text-align: justify;
+      line-height: 1.5;
+      margin-bottom: 10pt;
+      text-indent: 0.5in;
+    }
+
+    .no-indent { text-indent: 0; }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 12pt 0;
+      font-size: 11pt;
+    }
+    th, td {
+      border: 1px solid #000;
+      padding: 5pt 8pt;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #ddd; font-weight: bold; }
+
+    @media print {
+      body { background: #fff; }
+      .page { box-shadow: none; margin: 0; padding: 25mm 25mm 25mm 30mm; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     CHAPTER 5  —  PAGE 1  (Main Chapter Content ~1 A4 page)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="page">
+
+  <h1>Chapter 5: Implementation and Testing</h1>
+
+  <p>
+    The implementation phase of GyanCode represents the translation of the
+    system's architectural blueprints into a fully functional, cloud-deployed
+    platform. Built upon a modern <em>React + Vite</em> frontend and a
+    <em>Node.js/Express</em> backend, the system leverages <em>Supabase
+    (PostgreSQL)</em> as its primary data layer, thereby removing the need for
+    a self-managed database server. Google Gemini API and OpenRouter (DeepSeek R1
+    fallback) power all AI-driven features, including code execution simulation,
+    AI hint generation, and the GyanBot tutor. Every component was developed
+    following a modular, component-driven approach that ensures maintainability
+    and future scalability.
+  </p>
+
+  <p>
+    The development cycle was structured into three sequential sprints. The first
+    sprint concentrated on authentication, role-based access control, and the
+    core assignment CRUD operations. The second sprint introduced the AI execution
+    engine, the submission pipeline with automatic point rewards, and the
+    educator dashboard analytics. The third and final sprint delivered the
+    certification system, the leaderboard, student progress charts, and the
+    system-wide report export. Throughout all sprints, version control was
+    maintained through Git, and environment-specific configuration was kept
+    separate via <code>.env</code> files, preventing sensitive keys from entering
+    the public repository.
+  </p>
+
+  <p>
+    The testing strategy adopted for GyanCode was multi-layered, encompassing
+    unit testing of isolated utility functions, integration testing of API
+    endpoints against the live Supabase instance, and beta testing with actual
+    students and educators. The system was deployed to production early (Vercel
+    for the frontend and Render for the backend) so that real-world network
+    conditions and authentication flows could be validated continuously rather
+    than only at the end of the project. This continuous-deployment model
+    dramatically accelerated the feedback loop and revealed edge cases —
+    particularly around JWT expiry and AI API rate limits — that would have
+    otherwise been difficult to reproduce in a purely local environment.
+  </p>
+
+  <p>
+    Row Level Security (RLS) policies enforced at the Supabase PostgreSQL layer
+    ensure that students can only access their own data, educators can view all
+    student submissions, and administrators retain unrestricted access across
+    every table. The <code>is_educator()</code> and <code>is_admin()</code>
+    SQL functions, defined with <code>SECURITY DEFINER</code>, are evaluated
+    server-side for every database call, creating a tamper-proof access
+    control layer independent of frontend logic. Middleware functions
+    (<code>authenticate</code> and <code>authorize</code>) on the Express
+    backend double-validate every incoming request before it reaches a route
+    handler, providing defence-in-depth security.
+  </p>
+
+  <p>
+    The culmination of the implementation effort is a platform that is live,
+    accessible through a public URL, and actively used by learners. The following
+    sections detail the specific implementation strategies, code efficiency
+    measures, testing methodologies, modifications made during development, and
+    the formal test cases used to validate system correctness.
+  </p>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     5.1  Implementation Approach  (~half A4 page)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="page">
+
+  <h2>5.1  Implementation Approach</h2>
+
+  <p>
+    GyanCode was implemented using a <em>full-stack JavaScript</em> approach,
+    allowing a single language — and often shared logic — to span both the
+    frontend and backend. The frontend was scaffolded with <strong>Vite +
+    React</strong>, providing near-instantaneous hot-module replacement during
+    development and an optimised production bundle at deployment time. Routing
+    was handled by <strong>React Router v6</strong>, and global state was managed
+    by lightweight <code>useState</code>/<code>useEffect</code> hooks, avoiding
+    the overhead of large state-management libraries for a project of this scope.
+  </p>
+
+  <p>
+    On the server side, <strong>Express.js</strong> was chosen for its minimal
+    footprint and rich ecosystem. Each HTTP route is protected by the
+    <code>authenticate</code> middleware, which extracts and validates the Supabase
+    JWT from the <code>Authorization</code> header, and then optionally by
+    <code>authorize(['Admin'])</code> for privileged operations such as managing
+    platform settings or bulk-deleting users. All database mutations bypass the
+    client-side Row Level Security and instead use the <code>supabaseAdmin</code>
+    service-role client, which provides elevated privileges — an intentional
+    design decision that keeps business logic in the server layer rather than
+    exposing it to the browser.
+  </p>
+
+  <p>
+    The AI execution engine, located in <code>backend/utils/ai.js</code>, exposes
+    three key functions: <code>simulateExecutionAI</code> for running code
+    against a single input, <code>verifySubmissionAI</code> for batch-testing
+    all test cases and performing semantic logic validation, and
+    <code>generateHint</code> for generating personalised, contextual hints when
+    a student's submission fails. The <code>runAITask</code> wrapper transparently
+    switches between the Gemini API and DeepSeek R1 (via OpenRouter) based on
+    quota availability, ensuring continuous uptime even when primary API limits
+    are reached.
+  </p>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     5.2  Coding Details and Efficiency  (~half A4 page)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="page">
+
+  <h2>5.2  Coding Details and Efficiency</h2>
+
+  <p>
+    GyanCode's codebase follows the principle of <em>separation of concerns</em>:
+    UI components in <code>frontend/src/pages/</code>, reusable presentation
+    components in <code>frontend/src/components/</code>, utility helpers in
+    <code>frontend/src/utils/</code>, and all business logic consolidated within
+    <code>backend/server.js</code> and <code>backend/utils/</code>. This
+    structuring minimises coupling and simplifies both testing and future
+    maintenance.
+  </p>
+
+  <p>
+    Data fetching is performed through direct REST calls to the Express backend
+    rather than through the Supabase JavaScript client on the frontend. This
+    architectural choice means that all RLS-bypass operations are handled
+    server-side, preventing accidental exposure of the service-role key in
+    browser bundles. Educator and admin dashboards make use of parallel
+    <code>Promise.all</code> patterns where appropriate — for example,
+    simultaneously fetching students and submissions lists — reducing overall
+    page load latency. Pagination and lazy loading are applied on the Assignments
+    page to prevent performance degradation as the assignment library grows.
+  </p>
+
+  <p>
+    Chart.js is used for rendering submission trend graphs and success/failure
+    pie charts on the Educator Dashboard and Student Progress pages. Chart
+    instances are destroyed and re-initialised on component unmount to prevent
+    memory leaks, a common pitfall with canvas-based charting libraries in React's
+    Virtual DOM reconciliation model. The <code>reportGenerator.js</code> utility
+    uses the <strong>SheetJS (xlsx)</strong> library to produce multi-sheet Excel
+    exports of system statistics on demand, supporting the educator's reporting
+    requirements without requiring any server-side file generation.
+  </p>
+
+  <h3>5.2.1  Code Efficiency</h3>
+
+  <p>
+    Efficiency in GyanCode is addressed at both the algorithmic and
+    infrastructure level. On the backend, assignment lists are enriched with
+    submission counts in a single post-fetch aggregation rather than issuing one
+    database query per assignment, reducing the number of round-trips from
+    <em>O(n)</em> to <em>O(1)</em> per list request. The leaderboard endpoint
+    similarly computes period-filtered rankings in-memory after fetching a
+    single, appropriately scoped result set from Supabase.
+  </p>
+
+  <p>
+    On the frontend, React's <code>useMemo</code> and <code>useCallback</code>
+    hooks are applied to expensive filter/sort operations such as the student
+    search bar on the Admin Panel, preventing redundant re-computations on every
+    render cycle. Suspense-style skeleton loaders are shown while API calls
+    resolve, maintaining perceived responsiveness. Code-splitting via Vite's
+    dynamic import is used for large page components (e.g., <code>AdminPanel</code>
+    and <code>Certificates</code>), reducing the initial bundle size and
+    improving the First Contentful Paint metric.
+  </p>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     5.3  Testing Approach  (~half A4 page)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="page">
+
+  <h2>5.3  Testing Approach</h2>
+
+  <p>
+    Testing for GyanCode was conducted across three distinct levels: unit
+    testing of discrete utility functions, integration testing of REST API
+    endpoints, and user-centric beta testing with real participants. This
+    stratified approach ensured that defects were caught as close to their origin
+    as possible, minimising the cost of remediation.
+  </p>
+
+  <p>
+    Before formal test execution, a test planning phase identified all
+    <em>critical paths</em> — authentication, assignment submission, point
+    increment, automatic certificate issuance, and AI hint generation — as the
+    highest-priority areas for coverage. Edge cases such as expired deadlines,
+    duplicate successful submissions, and AI API failures were explicitly
+    documented and scripted as test scenarios to ensure that the system degraded
+    gracefully in each case rather than throwing unhandled exceptions.
+  </p>
+
+  <h3>5.3.1  Unit Testing</h3>
+
+  <p>
+    Unit tests were written for the AI utility module
+    (<code>backend/test-ai.js</code>) and the model availability checker
+    (<code>backend/test-models.js</code>) to verify that prompt construction,
+    response parsing, and fallback switching logic behaved correctly in isolation.
+    Each function was exercised with both valid and invalid inputs — including
+    intentionally malformed code and empty-string edge cases — to confirm robust
+    error handling. The <code>increment_points</code> PostgreSQL function was
+    validated via direct SQL assertions in the Supabase SQL Editor, confirming
+    atomicity and correct accumulation of points across concurrent inserts.
+  </p>
+
+  <h3>5.3.2  Integration Testing</h3>
+
+  <p>
+    Integration testing was performed manually using <strong>Postman</strong>
+    to exercise all 30+ REST endpoints defined in <code>server.js</code>.
+    Each request was sent with a valid JWT obtained from Supabase Auth, and
+    the response payload, HTTP status code, and database state were verified
+    against the expected contract. Three role-specific Postman collections were
+    maintained — one each for Student, Educator, and Admin — ensuring that
+    forbidden endpoints correctly returned <code>403 Forbidden</code> and that
+    cross-role data leaks were absent. The CORS configuration was validated
+    against both the Vercel production domain and localhost origins.
+  </p>
+
+  <h3>5.3.4  Beta Testing</h3>
+
+  <p>
+    Beta testing was conducted with a cohort of students and two educators over
+    a two-week period. Participants were provided with the live production URL
+    and asked to complete a structured task list covering registration, solving
+    at least three assignments, viewing their progress dashboard, and exploring
+    the AI Tutor. A structured feedback form was used to collect usability
+    observations. Key issues surfaced during beta testing included: (1) the
+    code editor on mobile devices requiring a responsive layout adjustment,
+    (2) an ambiguous error message when submitting code after a deadline had
+    passed, and (3) a race condition in the certificate issuance logic when
+    a student solved the threshold assignment twice in rapid succession. All
+    three issues were resolved before the final submission.
+  </p>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     5.4  Modification and Improvements  (~half A4 page)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="page">
+
+  <h2>5.4  Modification and Improvements</h2>
+
+  <p>
+    Throughout the iterative development cycle, several significant
+    modifications were made in response to beta feedback, performance profiling,
+    and evolving project requirements. These changes were not scope creep but
+    rather evidence of a responsive, quality-focused development philosophy.
+  </p>
+
+  <p>
+    The most impactful modification was the replacement of the original
+    single-test-case submission model with a multi-test-case architecture backed
+    by the <code>test_cases</code> database table. Initially, each assignment
+    stored a single <code>expected_input</code>/<code>expected_output</code>
+    pair directly on the assignments row. Educators quickly identified that this
+    model was insufficient to detect partial solutions or edge-case failures.
+    The updated system allows an unlimited number of test cases per assignment,
+    each of which can be independently marked as <em>hidden</em>, preventing
+    students from hard-coding solutions. The AI verification function
+    (<code>verifySubmissionAI</code>) was enhanced to process all test cases in
+    a single batched prompt and additionally conduct a semantic logic check to
+    detect non-generalisable solutions.
+  </p>
+
+  <p>
+    A secondary improvement concerned the AI fallback mechanism. The initial
+    implementation relied exclusively on the Google Gemini API; however, during
+    peak academic hours, the free-tier quota was exhausted frequently, rendering
+    features such as the AI Tutor and code execution unavailable. The
+    <code>runAITask</code> utility was refactored to automatically route requests
+    to <strong>DeepSeek R1</strong> via OpenRouter when a Gemini
+    <code>429 Too Many Requests</code> error is encountered, ensuring continuous
+    availability of AI features.
+  </p>
+
+  <p>
+    The authentication flow was substantially redesigned from the initial
+    username/password model. User registration and login were replaced with
+    <strong>Google OAuth</strong> (via Supabase's third-party provider integration),
+    allowing students and educators to sign in with a single click using their
+    existing Google account — eliminating the need to manage platform-specific
+    passwords altogether. Upon first sign-in through Google, Supabase automatically
+    provisions a user record, and a dedicated <code>/complete-registration</code>
+    endpoint is called to persist additional profile metadata (name, role,
+    department, academic year) that is not supplied by the OAuth provider.
+    Password-based credential management is retained exclusively for the
+    <strong>Forgot Password</strong> recovery flow, where <strong>Supabase Email
+    OTP</strong> is used to authenticate the user's identity before allowing a
+    password reset — a deliberate scoping decision that keeps the convenience of
+    social login for daily use while preserving a secure, verified recovery path.
+  </p>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     5.5  Test Cases  (~half A4 page)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="page">
+
+  <h2>5.5  Test Cases</h2>
+
+  <p>
+    The table below presents a representative subset of the formal test cases
+    executed during the integration and beta testing phases. Each test case
+    documents the input conditions, expected system behaviour, and the observed
+    outcome.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>TC #</th>
+        <th>Feature Under Test</th>
+        <th>Input / Precondition</th>
+        <th>Expected Result</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>TC-01</td>
+        <td>New User Registration via Google OAuth</td>
+        <td>Student clicks "Sign in with Google"; selects a Google account; completes profile form (name, role, department)</td>
+        <td>Supabase OAuth session created; <code>/complete-registration</code> called; profile row inserted in <code>users</code> table; dashboard rendered</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC-02</td>
+        <td>Returning User Login via Google OAuth</td>
+        <td>Existing user clicks "Sign in with Google" and selects the same Google account used previously</td>
+        <td>Supabase access token returned; existing profile loaded; role-appropriate dashboard rendered</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC-03</td>
+        <td>Assignment Submission – Correct Code</td>
+        <td>Student submits code that passes all test cases</td>
+        <td>Status = "Success"; points awarded; certificate check triggered</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC-04</td>
+        <td>Assignment Submission – Wrong Output</td>
+        <td>Student submits code with incorrect logic</td>
+        <td>Status = "Failed"; AI hint generated and returned</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC-05</td>
+        <td>Duplicate Successful Submission</td>
+        <td>Student re-submits correct code after prior success</td>
+        <td>Submission recorded; no additional points awarded</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC-06</td>
+        <td>Deadline Enforcement</td>
+        <td>Submission attempt after assignment deadline</td>
+        <td>HTTP 400; "This assignment is past its deadline" message</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC-07</td>
+        <td>Auto Certificate Issuance</td>
+        <td>Student solves the <em>n</em>th unique assignment where <em>n</em> equals the configured threshold</td>
+        <td>Certificate record inserted in <code>certificates</code> table</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC-08</td>
+        <td>Role-Based Access: Student accessing /stats</td>
+        <td>JWT of a Student role used for GET /stats</td>
+        <td>HTTP 403 Forbidden</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC-09</td>
+        <td>AI Tutor Query</td>
+        <td>Student posts a valid question to /ai-tutor</td>
+        <td>Coherent, language-appropriate response returned within 5 seconds</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC-10</td>
+        <td>Gemini API Quota Exceeded</td>
+        <td>Gemini returns 429; AI request retried</td>
+        <td>DeepSeek R1 fallback invoked; response returned normally</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC-11</td>
+        <td>Forgot Password – Email OTP Flow</td>
+        <td>User triggers "Forgot Password"; enters registered email; enters received OTP</td>
+        <td>Supabase OTP verified; password-reset screen displayed; new password saved successfully</td>
+        <td>Pass</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="no-indent" style="margin-top:10pt;">
+    All eleven representative test cases passed, confirming that the core
+    functional requirements of GyanCode are correctly implemented — including
+    the Google OAuth login/registration flow, the Email OTP-based forgot-password
+    recovery path, and all submission, AI, and access-control behaviours — and
+    that the system performs as designed under both normal and adverse conditions.
+  </p>
+
+</div>
+
+</body>
+</html>

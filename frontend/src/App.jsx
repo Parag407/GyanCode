@@ -27,6 +27,7 @@ import Documentation from './pages/Documentation';
 import NotFound from './pages/NotFound';
 import Assignments from './pages/Assignments';
 import ResetPassword from './pages/ResetPassword';
+import CompleteProfile from './pages/CompleteProfile';
 import AdminPanel from './pages/AdminPanel';
 
 function App() {
@@ -81,22 +82,25 @@ function App() {
         });
         if (res.ok) {
           const profileData = await res.json();
+          // New Google OAuth user — profile row exists but role not set yet
+          if (!profileData.role && !window.location.pathname.includes('/complete-profile')) {
+            console.log('[App] Profile has no role — redirecting to complete-profile');
+            setLoading(false);
+            window.location.replace('/complete-profile');
+            return;
+          }
           console.log('[App] Backend profile fetched successfully:', profileData.role);
           setProfile(profileData);
           setLoading(false);
           return;
         }
-        console.warn('[App] Backend profile API failed, trying fallback...');
-      }
-      
-      const { data, error } = await supabase
-        .from('users').select('*').eq('id', userId).single();
-      if (error) {
-        console.error('[App] Supabase profile data error:', error);
-      }
-      if (data) {
-        console.log('[App] Profile fallback fetched from Supabase');
-        setProfile(data);
+        // Backend returned non-ok — no profile row exists yet (new OAuth user)
+        if (!window.location.pathname.includes('/complete-profile')) {
+          console.warn('[App] Backend /profile non-ok — redirecting to complete-profile');
+          setLoading(false);
+          window.location.replace('/complete-profile');
+          return;
+        }
       }
     } catch (e) {
       console.error('[App] Profile fetch error:', e);
@@ -138,6 +142,7 @@ function App() {
               <Route path="/login" element={!session ? <Login /> : <Navigate to="/" />} />
               <Route path="/register" element={!session ? <Register /> : <Navigate to="/" />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/complete-profile" element={session ? <CompleteProfile /> : <Navigate to="/login" />} />
 
               {/* Public */}
               <Route path="/leaderboard" element={(settings.student_leaderboard_visible !== false || profile?.role === 'Admin') ? <Leaderboard profile={profile} /> : <Navigate to="/" />} />

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>GyanCode – Deployment Diagram</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #fbfbfb;
+  font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; padding: 40px 20px;
+}
+.card {
+  background: #fff;
+  padding: 40px 35px;
+  border-radius: 12px;
+  box-shadow: 0 4px 30px rgba(0,0,0,.15);
+  position: relative;
+}
+.diagram {
+  position: relative;
+  width: 1000px; height: 550px;
+}
+.title {
+  font-size: 24px; font-weight: bold;
+  color: #000; text-align: center; font-family: Arial;
+  margin-bottom: 30px;
+}
+
+/* 3D Node Construction */
+.node-container {
+  position: absolute;
+  /* Allows child elements to stack correctly */
+}
+
+/* The Front Face */
+.node-front {
+  position: absolute; top: 0; left: 0;
+  background: #ebebeb;
+  border: 1px solid #a0a0a0;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 15px;
+  z-index: 3;
+}
+.node-title {
+  font-weight: bold; font-size: 14px; text-align: center;
+  margin-bottom: 12px; color: #111;
+}
+
+/* The Top Face */
+.node-top {
+  position: absolute;
+  top: -20px; left: 10px;
+  height: 20px;
+  background: #dfdfdf;
+  border: 1px solid #a0a0a0;
+  border-bottom: none;
+  transform: skewX(-45deg);
+  z-index: 2;
+}
+
+/* The Right Face */
+.node-right {
+  position: absolute;
+  top: -10px;
+  width: 20px;
+  background: #d4d4d4;
+  border: 1px solid #a0a0a0;
+  border-left: none;
+  transform: skewY(-45deg);
+  z-index: 1;
+  box-shadow: 15px 15px 20px rgba(0,0,0,0.1);
+}
+
+/* White component boxes inside the node */
+.inner-comp {
+  width: 130px;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 12px 10px 12px 20px;
+  margin-bottom: 15px;
+  font-size: 12.5px;
+  font-weight: bold;
+  position: relative;
+  display: flex; align-items: center; justify-content: flex-start;
+  min-height: 50px;
+}
+/* Component Icon in top-left */
+.inner-comp::before, .inner-comp::after {
+  content: ''; position: absolute; left: -6px; width: 10px; height: 6px;
+  background: #fff; border: 1px solid #ccc;
+}
+.inner-comp::before { top: 10px; }
+.inner-comp::after { bottom: 10px; }
+
+/* SVG for lines and lollipops */
+svg { position: absolute; inset: 0; pointer-events: none; overflow: visible; z-index: 4;}
+text.lbl { fill: #000; font-size: 11.5px; font-family: Arial; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="title">Deployment Diagram for GyanCode Web Services</div>
+  
+  <div class="diagram">
+
+    <!-- NODE 1: Client Device -->
+    <div class="node-container" style="left:50px; top:200px; width:160px; height:180px;">
+      <div class="node-top" style="width:160px;"></div>
+      <div class="node-right" style="height:180px; left:160px;"></div>
+      <div class="node-front" style="width:160px; height:180px;">
+        <div class="node-title">Client Device<br>(Web Browser)</div>
+        <div class="inner-comp" style="margin-top:20px; text-align:center; padding-left:10px; justify-content:center;">React Single Page Application</div>
+      </div>
+    </div>
+
+    <!-- NODE 2: Frontend Hosting (Vercel) -->
+    <div class="node-container" style="left:280px; top:230px; width:120px; height:120px;">
+      <div class="node-top" style="width:120px;"></div>
+      <div class="node-right" style="height:120px; left:120px;"></div>
+      <div class="node-front" style="width:120px; height:120px; justify-content:center;">
+        <div class="node-title">Vercel CDN<br>(Static Hosting)</div>
+      </div>
+    </div>
+
+    <!-- NODE 3: Application Server (Render) -->
+    <div class="node-container" style="left:480px; top:60px; width:170px; height:450px;">
+      <div class="node-top" style="width:170px;"></div>
+      <div class="node-right" style="height:450px; left:170px;"></div>
+      <div class="node-front" style="width:170px; height:450px;">
+        <div class="node-title">Application Server<br>(Node.js Express)</div>
+        
+        <div class="inner-comp" style="margin-top:10px;">Submission<br>Engine</div>
+        <div class="inner-comp">AI Tutor &amp;<br>Coordinator</div>
+        <div class="inner-comp">Auth &amp; Policy<br>Middleware</div>
+        <div class="inner-comp">Reporting<br>Service</div>
+      </div>
+    </div>
+
+    <!-- NODE 4: Data Storage (Supabase) -->
+    <div class="node-container" style="left:820px; top:60px; width:170px; height:450px;">
+      <div class="node-top" style="width:170px;"></div>
+      <div class="node-right" style="height:450px; left:170px;"></div>
+      <div class="node-front" style="width:170px; height:450px;">
+        <div class="node-title">Data Storage<br>(Supabase Cloud)</div>
+        
+        <div class="inner-comp" style="margin-top:30px;">PostgreSQL<br>Database</div>
+        <div class="inner-comp" style="margin-top:80px;">Supabase Auth<br>Service</div>
+      </div>
+    </div>
+
+    <!-- SVG Connections -->
+    <svg viewBox="0 0 1000 550" width="1000" height="550">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0,0 L 10,5 L 0,10 Z" fill="#2e8b57"/>
+        </marker>
+      </defs>
+
+      <!-- Client to Vercel -->
+      <line x1="210" y1="290" x2="280" y2="290" stroke="#000" stroke-width="1.5"/>
+
+      <!-- Vercel to App Server -->
+      <line x1="400" y1="290" x2="480" y2="290" stroke="#000" stroke-width="1.5"/>
+
+      <!-- Lollipops extending from App Server towards Data Storage -->
+      <!-- Submission Engine -->
+      <line x1="650" y1="140" x2="710" y2="140" stroke="#999" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <circle cx="715" cy="140" r="5" fill="#fff" stroke="#000" stroke-width="1.5"/>
+
+      <!-- AI Tutor -->
+      <line x1="650" y1="220" x2="710" y2="220" stroke="#999" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <circle cx="715" cy="220" r="5" fill="#fff" stroke="#000" stroke-width="1.5"/>
+
+      <!-- Auth Middleware -->
+      <line x1="650" y1="300" x2="710" y2="300" stroke="#999" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <circle cx="715" cy="300" r="5" fill="#fff" stroke="#000" stroke-width="1.5"/>
+
+      <!-- Reporting Service -->
+      <line x1="650" y1="380" x2="710" y2="380" stroke="#999" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <circle cx="715" cy="380" r="5" fill="#fff" stroke="#000" stroke-width="1.5"/>
+
+
+      <!-- Green connections from Lollipops to DB components (similar to the image) -->
+      
+      <!-- Submission Engine (140) -> PostgreSQL (155) -->
+      <line x1="720" y1="140" x2="810" y2="140" stroke="#2e8b57" stroke-width="1.5"/>
+      <line x1="810" y1="140" x2="810" y2="155" stroke="#2e8b57" stroke-width="1.5"/>
+      <line x1="810" y1="155" x2="820" y2="155" stroke="#2e8b57" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- Common vertical green trunk for others -->
+      <!-- Vertical line from y=160 to y=420 at x=750 -->
+      <line x1="750" y1="160" x2="750" y2="420" stroke="#2e8b57" stroke-width="1.5"/>
+      <!-- Top entry to PostgreSQL -->
+      <line x1="750" y1="160" x2="820" y2="160" stroke="#2e8b57" stroke-width="1.5" marker-end="url(#arrow)"/>
+      
+      <!-- Connect AI Tutor (220) to trunk -->
+      <line x1="720" y1="220" x2="750" y2="220" stroke="#2e8b57" stroke-width="1.5"/>
+      <!-- Connect Auth (300) to trunk -->
+      <line x1="720" y1="300" x2="750" y2="300" stroke="#2e8b57" stroke-width="1.5"/>
+      <!-- Connect Reporting (380) to trunk -->
+      <line x1="720" y1="380" x2="750" y2="380" stroke="#2e8b57" stroke-width="1.5"/>
+
+      <!-- Connect the vertical trunk to Supabase Auth Service (300) -->
+      <line x1="750" y1="310" x2="820" y2="310" stroke="#2e8b57" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- Internal connection line between DB and Auth in Data Storage -->
+      <line x1="885" y1="185" x2="885" y2="250" stroke="#000" stroke-width="1.5"/>
+
+    </svg>
+  </div>
+</div>
+</body>
+</html>
