@@ -94,7 +94,10 @@ export default function CompleteProfile() {
         return;
       }
 
-      navigate(form.role === 'Educator' ? '/educator/dashboard' : '/student/dashboard');
+      // Force a full page reload so App.jsx re-fetches the profile with the new role
+      // React Router navigate() would leave stale profile state causing route guard to deny access
+      const dest = form.role === 'Educator' ? '/educator/dashboard' : '/student/dashboard';
+      window.location.replace(dest);
     } catch (err) {
       console.error('[CompleteProfile] Fetch error:', err);
       setError(`Network error: ${err.message}. Check your connection or try again.`);
