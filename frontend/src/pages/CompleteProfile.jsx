@@ -6,38 +6,81 @@ import { Building2, BookOpen, CheckCircle2, AlertCircle, Loader2 } from 'lucide-
 export default function CompleteProfile() {
   const [form, setForm] = useState({ role: 'Student', academic_year: '', department: '' });
   const [loading, setLoading] = useState(false);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const [error, setError] = useState('');
   const [userName, setUserName] = useState('');
+  const [token, setToken] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get user's name from google metadata if available
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { navigate('/login'); return; }
-      const name = session.user?.user_metadata?.full_name || session.user?.user_metadata?.name || '';
-      setUserName(name);
+    let resolved = false;
+
+    // 1. Try getSession immediately (works if session already stored)
+    const tryGetSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && !resolved) {
+        resolved = true;
+        setToken(session.access_token);
+        const name = session.user?.user_metadata?.full_name
+          || session.user?.user_metadata?.name
+          || '';
+        setUserName(name);
+        setSessionLoading(false);
+      }
+    };
+
+    tryGetSession();
+
+    // 2. Also listen via onAuthStateChange — fires once OAuth hash is processed
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session && !resolved) {
+        resolved = true;
+        setToken(session.access_token);
+        const name = session.user?.user_metadata?.full_name
+          || session.user?.user_metadata?.name
+          || '';
+        setUserName(name);
+        setSessionLoading(false);
+      } else if (!session && !resolved) {
+        // No session after auth change — send to login
+        resolved = true;
+        setSessionLoading(false);
+        navigate('/login');
+      }
     });
+
+    // 3. Timeout fallback — if session never arrives
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        setSessionLoading(false);
+        navigate('/login');
+      }
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, [navigate]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!token) { setError('Session expired. Please sign in again.'); return; }
     setLoading(true);
     setError('');
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { navigate('/login'); return; }
-
-      const response = await fetch(import.meta.env.VITE_API_URL + '/complete-registration', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/complete-registration`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          name: userName || session.user?.email?.split('@')[0] || 'User',
+          name: userName || 'User',
           role: form.role,
           academic_year: form.academic_year,
           department: form.department,
@@ -45,19 +88,31 @@ export default function CompleteProfile() {
       });
 
       if (!response.ok) {
-        const resData = await response.json();
-        setError(resData.error || 'Failed to save profile. Please try again.');
+        const resData = await response.json().catch(() => ({}));
+        setError(resData.error || `Server error (${response.status}). Please try again.`);
         setLoading(false);
         return;
       }
 
-      // Navigate to appropriate dashboard
       navigate(form.role === 'Educator' ? '/educator/dashboard' : '/student/dashboard');
-    } catch {
-      setError('Could not connect to the server. Please try again.');
+    } catch (err) {
+      console.error('[CompleteProfile] Fetch error:', err);
+      setError(`Network error: ${err.message}. Check your connection or try again.`);
       setLoading(false);
     }
   };
+
+  // While waiting for session to be established after OAuth redirect
+  if (sessionLoading) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 size={36} className="animate-spin text-primary-light mx-auto" />
+          <p className="text-gray-500 text-sm">Setting up your account...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center relative">
@@ -135,7 +190,7 @@ export default function CompleteProfile() {
               </div>
             </div>
 
-            <button type="submit" disabled={loading}
+            <button type="submit" disabled={loading || !token}
               className="w-full btn-primary text-white py-3.5 rounded-xl font-bold text-base disabled:opacity-50 transition-all flex items-center justify-center gap-2">
               {loading ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : <><CheckCircle2 size={16} /> Complete Setup</>}
             </button>
